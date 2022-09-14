@@ -11,7 +11,7 @@ function init() {
 
   scene = new THREE.Scene();
 
-  const texture = new THREE.TextureLoader().load( 'textures/grass.jpg' );
+  const texture = new THREE.TextureLoader().load( 'textures/grass.gif' );
 
   const geometry = new THREE.BoxGeometry( 200, 200, 200 );
   const material = new THREE.MeshBasicMaterial( { map: texture } );
