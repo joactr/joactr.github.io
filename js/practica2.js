@@ -20,7 +20,6 @@ function init(){
     camera.position.set(cameraX,cameraY,cameraZ);
     window.addEventListener( 'resize', onWindowResize );
     controls = new THREE.OrbitControls( camera, renderer.domElement ); //Controles de la cámara con el raton
-    //orbitControls.screenSpacePanning = true;
 	controls.target.set(0, 150, 0);
     camera.lookAt(new THREE.Vector3(0, 150, 0)); //Hace que la cámara mire al origen de coordenadas
 }
@@ -76,7 +75,7 @@ function loadScene(){
 
     pinzasG.setIndex(pinzaIndices)
     pinzasG.setAttribute( 'position', new THREE.Float32BufferAttribute( pinzaPosition, 3 ) );
-    //pinzasG.setAttribute( 'normal', new THREE.Float32BufferAttribute( normales, 3 ) );
+    pinzasG.computeVertexNormals();
     
     //Las posiciones y rotaciones de las pinzas son distintas para que la parte externa de la pinza quede similar
     var pinzaIz = new THREE.Mesh(pinzasG, material);
@@ -117,9 +116,6 @@ function loadScene(){
     var mano = new THREE.Mesh(manoG, material);
     mano.position.set(0, 206, 0);
     mano.rotateZ(Math.PI/2);
-
-
-
 
     //Creamos y agregamos el plano base
     material = new THREE.MeshBasicMaterial({ color: 'green', wireframe: true }); //Creamos el material
