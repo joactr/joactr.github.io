@@ -3,6 +3,7 @@ var controls;
 
 
 
+
 function init(){
     renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -14,10 +15,20 @@ function init(){
     var aspectRatio = window.innerWidth / window.innerHeight;
     camera = new THREE.PerspectiveCamera(75,aspectRatio,0.1,1000);
     cameraX = 80;
-    cameraY = 200;
+    cameraY = 250;
     cameraZ = 80;
     camera.position.set(cameraX,cameraY,cameraZ);
+    window.addEventListener( 'resize', onWindowResize );
+    controls = new THREE.OrbitControls( camera, renderer.domElement ); //Controles de la cámara con el raton
+    //orbitControls.screenSpacePanning = true;
+	controls.target.set(0, 150, 0);
     camera.lookAt(new THREE.Vector3(0, 150, 0)); //Hace que la cámara mire al origen de coordenadas
+}
+
+function onWindowResize() { //Por si cambia el tamaño de la ventana
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
 function update(){
@@ -37,32 +48,44 @@ function loadScene(){
     var nervioG = new THREE.BoxGeometry(4, 80, 4);
     var manoG = new THREE.CylinderGeometry(15, 15, 40, 20);
     var pinzasG = new THREE.BufferGeometry();
-    const pinzaPosition = new Float32Array([
-        -18,0,0, 0,0,0, 18,4,0, 
-        18,16,0, 0,20,0, -18,20,0, 
-        -18,20,-4, 0,20,-4, 18,16,-2,
-        18,4,-2, 0,0,-4, -18,0,-4
+    const pinzaPosition = new Float32Array([ //Posiciones de cada uno de los vértices de las geometría de cada pinza
+        -18,0,0,//0
+        0,0,0,//1
+        18,4,0,//2
+        18,16,0,//3
+        0,20,0,//4  
+        -18,20,0,//5
+        -18,20,-4,//6
+        0,20,-4,//7   
+        18,16,-2,//8
+        18,4,-2,//9    
+        0,0,-4,//10   
+        -18,0,-4//11
     ]);
+    
+    const pinzaIndices = [
+        1,2,3,    3,4,1,    2,9,8, 
+        8,3,2,    7,8,9,    9,10,7, 
+        7,4,1,    6,7,10,   10,11,6, 
+        6,11,0,   0,5,6,    7,6,5,
+        8,7,4,    4,3,8,    2,1,10, 
+        0,1,4,    4,5,0,    1,10,7, 
+        5,4,7,    0,1,10,   10,11,0,
+        10,9,2,   11,10,1,   11,1,0
+    ]
 
-    const pinzaNormal = new Float32Array([
-        0,1,4, 4,5,0, 1,10,7, 7,4,1, 6,7,10, 10,11,6, 6,11,0, 0,5,6, 7,6,5, 5,4,7, 0,1,10, 10,11,0,
-        1,2,3, 3,4,1, 2,9,8, 8,3,2, 7,8,9, 9,10,7, 8,7,4, 4,3,8, 2,1,10, 10,9,2
-    ])
-
-    const indices = [];
-
-
+    pinzasG.setIndex(pinzaIndices)
     pinzasG.setAttribute( 'position', new THREE.Float32BufferAttribute( pinzaPosition, 3 ) );
-
-
-    //pinzasG.setAttribute( 'normal', new THREE.Float32BufferAttribute( pinzaNormal, 3 ) );
-
+    //pinzasG.setAttribute( 'normal', new THREE.Float32BufferAttribute( normales, 3 ) );
+    
+    //Las posiciones y rotaciones de las pinzas son distintas para que la parte externa de la pinza quede similar
     var pinzaIz = new THREE.Mesh(pinzasG, material);
-    //pinzaIz.rotateY(Math.PI / 2);
-    var pinzaDe = new THREE.Mesh(pinzasG, material);
-    //pinzaDe.rotateY(Math.PI / 2);
-    pinzaDe.position.set(0, 20, 0);
+    pinzaIz.position.set(-10, -6, 15);
+    pinzaIz.rotateX(-Math.PI / 2).rotateZ(-Math.PI / 2)
 
+    var pinzaDe = new THREE.Mesh(pinzasG, material);
+    pinzaDe.position.set(10, 6, 15);
+    pinzaDe.rotateX(Math.PI / 2).rotateZ(Math.PI / 2);
 
     var suelo = new THREE.PlaneGeometry(1000, 1000, 50, 50); //Ancho, alto, cantidad de segmentos ancho/alto
 
@@ -129,24 +152,23 @@ function render(){
     renderer.render(scene, camera);
 }
 
-document.onkeydown = function(e) {
+/*document.onkeydown = function(e) {
     switch (e.keyCode) {
         case 37:
-            cameraX -= 1;
+            cameraX -= 1.5;
         break;
         case 38:
-            cameraZ -= 1;
+            cameraZ -= 1.5;
         break;
         case 39:
-            cameraX += 1;
+            cameraX += 1.5;
         break;
         case 40:
-            cameraZ += 1;
+            cameraZ += 1.5;
         break;
         
     }
-    camera.position.set(cameraX,cameraY,cameraZ);
-};
+};*/
 
 init();
 loadScene();
