@@ -1,7 +1,7 @@
 /* To display anything, need a scene, a camera, and renderer */
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-scene.background = new THREE.Color( 0xff0000 );
+scene.background = new THREE.Color( 0x8532a8 );
 
 camera.position.z = 100;
 
