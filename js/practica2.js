@@ -14,9 +14,9 @@ function init(){
 
     var aspectRatio = window.innerWidth / window.innerHeight;
     camera = new THREE.PerspectiveCamera(75,aspectRatio,0.1,1000);
-    cameraX = 80;
+    cameraX = 0;
     cameraY = 250;
-    cameraZ = 80;
+    cameraZ = 100;
     camera.position.set(cameraX,cameraY,cameraZ);
     window.addEventListener( 'resize', onWindowResize );
     controls = new THREE.OrbitControls( camera, renderer.domElement ); //Controles de la cámara con el raton
@@ -47,44 +47,75 @@ function loadScene(){
     var nervioG = new THREE.BoxGeometry(4, 80, 4);
     var manoG = new THREE.CylinderGeometry(15, 15, 40, 20);
     var pinzasG = new THREE.BufferGeometry();
-    const pinzaPosition = new Float32Array([ //Posiciones de cada uno de los vértices de las geometría de cada pinza
-        -18,0,0,//0
-        0,0,0,//1
-        18,4,0,//2
-        18,16,0,//3
-        0,20,0,//4  
-        -18,20,0,//5
-        -18,20,-4,//6
-        0,20,-4,//7   
-        18,16,-2,//8
-        18,4,-2,//9    
-        0,0,-4,//10   
-        -18,0,-4//11
-    ]);
-    
-    const pinzaIndices = [
-        1,2,3,    3,4,1,    2,9,8, 
-        8,3,2,    7,8,9,    9,10,7, 
-        7,4,1,    6,7,10,   10,11,6, 
-        6,11,0,   0,5,6,    7,6,5,
-        8,7,4,    4,3,8,    2,1,10, 
-        0,1,4,    4,5,0,    1,10,7, 
-        5,4,7,    0,1,10,   10,11,0,
-        10,9,2,   11,10,1,   11,1,0
-    ]
+    var basePinzaG = new THREE.BoxGeometry(20, 19, 4);
 
-    pinzasG.setIndex(pinzaIndices)
-    pinzasG.setAttribute( 'position', new THREE.Float32BufferAttribute( pinzaPosition, 3 ) );
+    const puntosPinza = [ //Cada vector indica un vértice de la pinza
+        new THREE.Vector3(19, -10, -5), new THREE.Vector3(19, -8, 5),   new THREE.Vector3(19, -10, 5),
+
+        new THREE.Vector3(19, -10, 5),  new THREE.Vector3(0, -6, 10),   new THREE.Vector3(0, -10, 10),
+
+        new THREE.Vector3(19, -8, 5),   new THREE.Vector3(0, -6, 10),   new THREE.Vector3(19, -10, 5),
+
+        new THREE.Vector3(19, -10, -5), new THREE.Vector3(0, -10, -10), new THREE.Vector3(0, -6, -10),
+
+        new THREE.Vector3(19, -8, -5),  new THREE.Vector3(19, -10, -5), new THREE.Vector3(0, -6, -10),
+
+        new THREE.Vector3(19, -8, -5),  new THREE.Vector3(19, -8, 5),   new THREE.Vector3(19, -10, -5),
+
+        new THREE.Vector3(19, -8, 5),   new THREE.Vector3(0, -6, -10),  new THREE.Vector3(0, -6, 10),
+
+        new THREE.Vector3(19, -8, -5),  new THREE.Vector3(0, -6, -10),  new THREE.Vector3(19, -8, 5),
+
+        new THREE.Vector3(19, -10, 5),  new THREE.Vector3(0, -10, 10),  new THREE.Vector3(0, -10, -10),
+
+        new THREE.Vector3(19, -10, -5), new THREE.Vector3(19, -10, 5),  new THREE.Vector3(0, -10, -10),
+    ];
+
+    normals = new Float32Array( //Normales de cada vértice para cada cara de forma normalizada
+        [
+            1,0,0,  1,0,0,  1,0,0,
+
+            0.9701425001453319,0.24253562503633297,0,   0.9701425001453319,0.24253562503633297,0,   0.9701425001453319,0.24253562503633297,0,
+
+            0.9701425001453319,0.24253562503633297,0,   0.9701425001453319,0.24253562503633297,0,   0.9701425001453319,0.24253562503633297,0,
+
+            0.9701425001453319,-0.24253562503633297,0,  0.9701425001453319,-0.24253562503633297,0,  0.9701425001453319,-0.24253562503633297,0,
+
+            0.9701425001453319,-0.24253562503633297,0,  0.9701425001453319,-0.24253562503633297,0,  0.9701425001453319,-0.24253562503633297,0,
+
+            1,0,0,  1,0,0,  1,0,0,
+
+            0.10468478451804274, 0.994505452921406, 0,  0.10468478451804274, 0.994505452921406, 0,  0.10468478451804274, 0.994505452921406, 0,
+
+            0.10468478451804274, 0.994505452921406, 0,  0.10468478451804274, 0.994505452921406, 0,  0.10468478451804274, 0.994505452921406, 0,
+
+            0,1,0,  0,1,0,  0,1,0,
+            
+            0,1,0,  0,1,0,  0,1,0,
+        ]
+    );
+
+    //Probé a definirlo mediante posiciones e índices pero no cogía las normales
+    pinzasG.setFromPoints(puntosPinza)
+    pinzasG.setAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) );
     pinzasG.computeVertexNormals();
     
     //Las posiciones y rotaciones de las pinzas son distintas para que la parte externa de la pinza quede similar
     var pinzaIz = new THREE.Mesh(pinzasG, material);
-    pinzaIz.position.set(-10, -6, 15);
-    pinzaIz.rotateX(-Math.PI / 2).rotateZ(-Math.PI / 2)
+    pinzaIz.position.set(0, -16, 20);
+    pinzaIz.rotateY(-Math.PI / 2).rotateX(-Math.PI);
 
     var pinzaDe = new THREE.Mesh(pinzasG, material);
-    pinzaDe.position.set(10, 6, 15);
-    pinzaDe.rotateX(Math.PI / 2).rotateZ(Math.PI / 2);
+    pinzaDe.position.set(0, 0, 20);
+    pinzaDe.rotateY(-Math.PI / 2).rotateX(-Math.PI);
+
+    var basePinzaIz = new THREE.Mesh(basePinzaG, material);
+    basePinzaIz.rotateX(Math.PI / 2);
+    basePinzaIz.position.set(0,-8,11);
+
+    var basePinzaDe = new THREE.Mesh(basePinzaG, material);
+    basePinzaDe.rotateX(Math.PI / 2);
+    basePinzaDe.position.set(0,8,11);
 
     var suelo = new THREE.PlaneGeometry(1000, 1000, 50, 50); //Ancho, alto, cantidad de segmentos ancho/alto
 
@@ -125,8 +156,11 @@ function loadScene(){
     scene.add(new THREE.AxesHelper(1000));
 
     //Completamos y agregamos el robot y sus partes a la escena mediante el grafo de escena
+
     mano.add(pinzaIz);
     mano.add(pinzaDe);
+    mano.add(basePinzaIz);
+    mano.add(basePinzaDe);
     antebrazo.add(disco);
     antebrazo.add(nervio1);
     antebrazo.add(nervio2);
