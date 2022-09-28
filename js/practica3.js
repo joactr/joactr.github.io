@@ -85,7 +85,7 @@ function loadScene(){
     var nervioG = new THREE.BoxGeometry(4, 80, 4);
     var manoG = new THREE.CylinderGeometry(15, 15, 40, 20);
     var pinzasG = new THREE.BufferGeometry();
-    var basePinzaG = new THREE.BoxGeometry(20, 19, 4);
+    var basePinzaG = new THREE.BoxGeometry(19.9, 20, 4);
 
     const puntosPinza = [ //Cada vector indica un vértice de la pinza
         new THREE.Vector3(19, -10, -5), new THREE.Vector3(19, -8, 5),   new THREE.Vector3(19, -10, 5),
@@ -149,11 +149,11 @@ function loadScene(){
 
     var basePinzaIz = new THREE.Mesh(basePinzaG, material);
     basePinzaIz.rotateX(Math.PI / 2);
-    basePinzaIz.position.set(0,-8,11);
+    basePinzaIz.position.set(0,-8,10);
 
     var basePinzaDe = new THREE.Mesh(basePinzaG, material);
     basePinzaDe.rotateX(Math.PI / 2);
-    basePinzaDe.position.set(0,8,11);
+    basePinzaDe.position.set(0,8,10);
 
     var suelo = new THREE.PlaneGeometry(1000, 1000, 50, 50); //Ancho, alto, cantidad de segmentos ancho/alto
 

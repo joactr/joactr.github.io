@@ -111,11 +111,11 @@ function loadScene(){
 
     var basePinzaIz = new THREE.Mesh(basePinzaG, material);
     basePinzaIz.rotateX(Math.PI / 2);
-    basePinzaIz.position.set(0,-8,11);
+    basePinzaIz.position.set(0,-8,10);
 
     var basePinzaDe = new THREE.Mesh(basePinzaG, material);
     basePinzaDe.rotateX(Math.PI / 2);
-    basePinzaDe.position.set(0,8,11);
+    basePinzaDe.position.set(0,8,10);
 
     var suelo = new THREE.PlaneGeometry(1000, 1000, 50, 50); //Ancho, alto, cantidad de segmentos ancho/alto
 
