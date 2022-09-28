@@ -35,7 +35,7 @@ function update(){
 }
 
 function loadScene(){
-    var material = new THREE.MeshNormalMaterial({ color: 'red', wireframe: false }); //Creamos el material
+    var material = new THREE.MeshBasicMaterial({ color: 'red', wireframe: true }); //Creamos el material
     var robot = new THREE.Object3D(); //Creamos el robot
     var baseG = new THREE.CylinderGeometry(50, 50, 15, 25); //RadioTop,RadioBot,altura,segmentosRad
     var brazo = new THREE.Object3D();
