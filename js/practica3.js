@@ -21,7 +21,7 @@ function init(){
     controls = new THREE.OrbitControls( camera, renderer.domElement ); //Controles de la cámara con el raton
 	controls.target.set(0, 150, 0);
     //Se limita el zoom
-    controls.minDistance = 20;
+    controls.minDistance = 50;
     controls.maxDistance = 500;
     camera.lookAt(new THREE.Vector3(0, 150, 0)); //Hace que la cámara mire al punto
     cameraTop.lookAt(new THREE.Vector3(0, 0, 0)); //Hace que la cámara mire al origen de coordenadas
