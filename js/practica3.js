@@ -141,11 +141,11 @@ function loadScene(){
     //Las posiciones y rotaciones de las pinzas son distintas para que la parte externa de la pinza quede similar
     var pinzaIz = new THREE.Mesh(pinzasG, material);
     pinzaIz.position.set(0, -16, 20);
-    pinzaIz.rotateY(-Math.PI / 2).rotateX(-Math.PI);
+    pinzaIz.rotateY(-Math.PI / 2).rotateX(Math.PI);
 
     var pinzaDe = new THREE.Mesh(pinzasG, material);
-    pinzaDe.position.set(0, 0, 20);
-    pinzaDe.rotateY(-Math.PI / 2).rotateX(-Math.PI);
+    pinzaDe.position.set(0, 16, 20);
+    pinzaDe.rotateY(Math.PI / 2).rotateX(Math.PI).rotateZ(-Math.PI);
 
     var basePinzaIz = new THREE.Mesh(basePinzaG, material);
     basePinzaIz.rotateX(Math.PI / 2);

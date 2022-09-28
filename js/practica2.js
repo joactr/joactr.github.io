@@ -35,7 +35,7 @@ function update(){
 }
 
 function loadScene(){
-    var material = new THREE.MeshBasicMaterial({ color: 'red', wireframe: true }); //Creamos el material
+    var material = new THREE.MeshNormalMaterial({ color: 'red', wireframe: false }); //Creamos el material
     var robot = new THREE.Object3D(); //Creamos el robot
     var baseG = new THREE.CylinderGeometry(50, 50, 15, 25); //RadioTop,RadioBot,altura,segmentosRad
     var brazo = new THREE.Object3D();
@@ -103,11 +103,11 @@ function loadScene(){
     //Las posiciones y rotaciones de las pinzas son distintas para que la parte externa de la pinza quede similar
     var pinzaIz = new THREE.Mesh(pinzasG, material);
     pinzaIz.position.set(0, -16, 20);
-    pinzaIz.rotateY(-Math.PI / 2).rotateX(-Math.PI);
+    pinzaIz.rotateY(-Math.PI / 2).rotateX(Math.PI);
 
     var pinzaDe = new THREE.Mesh(pinzasG, material);
-    pinzaDe.position.set(0, 0, 20);
-    pinzaDe.rotateY(-Math.PI / 2).rotateX(-Math.PI);
+    pinzaDe.position.set(0, 16, 20);
+    pinzaDe.rotateY(Math.PI / 2).rotateX(Math.PI).rotateZ(-Math.PI);
 
     var basePinzaIz = new THREE.Mesh(basePinzaG, material);
     basePinzaIz.rotateX(Math.PI / 2);
