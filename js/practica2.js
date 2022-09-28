@@ -14,9 +14,9 @@ function init(){
 
     var aspectRatio = window.innerWidth / window.innerHeight;
     camera = new THREE.PerspectiveCamera(75,aspectRatio,0.1,1000);
-    cameraX = 0;
+    cameraX = 80;
     cameraY = 250;
-    cameraZ = 100;
+    cameraZ = 80;
     camera.position.set(cameraX,cameraY,cameraZ);
     window.addEventListener( 'resize', onWindowResize );
     controls = new THREE.OrbitControls( camera, renderer.domElement ); //Controles de la cámara con el raton
