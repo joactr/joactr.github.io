@@ -1,7 +1,10 @@
 import GUI from '../lib/lil-gui.module.min.js'; 
+import {TWEEN} from '../lib/tween.module.min.js'; 
 
 let renderer, scene, camera, cameraPlanta;
 let controls;
+var material_robot,robot,suelo,base,esparrago,rotula,eje,mano,basePinzaDe,basePinzaIz,pinzaDe,pinzaIz,brazo,antebrazo;
+var disco,nervio1,nervio2,nervio3,nervio4;
 let L = 90;
 
 
@@ -13,7 +16,7 @@ function init(){
     document.body.appendChild(renderer.domElement);
 
     scene = new THREE.Scene();
-
+    
     var aspectRatio = window.innerWidth / window.innerHeight;
     camera = new THREE.PerspectiveCamera(75,aspectRatio,0.1,1000);
     var cameraTop = new THREE.PerspectiveCamera(90,aspectRatio,0.1,1000);
@@ -27,6 +30,7 @@ function init(){
     controls.maxDistance = 500;
     camera.lookAt(new THREE.Vector3(0, 150, 0)); //Hace que la cámara mire al punto
     cameraTop.lookAt(new THREE.Vector3(0, 0, 0)); //Hace que la cámara mire al origen de coordenadas
+    
 
 }
 
@@ -75,14 +79,14 @@ function setCameras(ar){ //Inicializa la cámara ortográfica de planta
 }
 
 function loadScene(){
-    var material = new THREE.MeshNormalMaterial({ color: 'red', wireframe: false }); //Creamos el material
-    var robot = new THREE.Object3D(); //Creamos el robot
+    material_robot = new THREE.MeshNormalMaterial({ wireframe: false }); //Creamos el material
+    robot = new THREE.Object3D(); //Creamos el robot
     var baseG = new THREE.CylinderGeometry(50, 50, 15, 25); //RadioTop,RadioBot,altura,segmentosRad
-    var brazo = new THREE.Object3D();
+    brazo = new THREE.Object3D();
     var ejeG = new THREE.CylinderGeometry(25, 25, 15, 20);
     var esparragoG = new THREE.BoxGeometry(18, 120, 12);
     var rotulaG = new THREE.SphereGeometry( 20, 10, 10 ); //Radio, segmentosAlto/Ancho
-    var antebrazo = new THREE.Object3D();
+    antebrazo = new THREE.Object3D();
     var discoG = new THREE.CylinderGeometry(22, 22, 6, 20);
     var nervioG = new THREE.BoxGeometry(4, 80, 4);
     var manoG = new THREE.CylinderGeometry(15, 15, 40, 20);
@@ -141,64 +145,65 @@ function loadScene(){
     pinzasG.computeVertexNormals();
     
     //Las posiciones y rotaciones de las pinzas son distintas para que la parte externa de la pinza quede similar
-    var pinzaIz = new THREE.Mesh(pinzasG, material);
-    pinzaIz.position.set(0, -16, 20);
-    pinzaIz.rotateY(-Math.PI / 2).rotateX(Math.PI);
+    pinzaIz = new THREE.Mesh(pinzasG, material_robot);
+    pinzaIz.position.set(0, 10, 8);
+    pinzaIz.rotateY(-Math.PI / 2).rotateX(Math.PI).rotateZ(-Math.PI/2);
 
-    var pinzaDe = new THREE.Mesh(pinzasG, material);
-    pinzaDe.position.set(0, 16, 20);
-    pinzaDe.rotateY(Math.PI / 2).rotateX(Math.PI).rotateZ(-Math.PI);
+    pinzaDe = new THREE.Mesh(pinzasG, material_robot);
+    pinzaDe.position.set(0, 10, -8);
+    pinzaDe.rotateX(Math.PI / 2).rotateY(-Math.PI/2).rotateZ(-Math.PI);
 
-    var basePinzaIz = new THREE.Mesh(basePinzaG, material);
+    basePinzaIz = new THREE.Mesh(basePinzaG, material_robot);
     basePinzaIz.rotateX(Math.PI / 2);
     basePinzaIz.position.set(0,-8,10);
 
-    var basePinzaDe = new THREE.Mesh(basePinzaG, material);
+    basePinzaDe = new THREE.Mesh(basePinzaG, material_robot);
     basePinzaDe.rotateX(Math.PI / 2);
     basePinzaDe.position.set(0,8,10);
 
-    var suelo = new THREE.PlaneGeometry(1000, 1000, 50, 50); //Ancho, alto, cantidad de segmentos ancho/alto
+    suelo = new THREE.PlaneGeometry(1000, 1000, 50, 50); //Ancho, alto, cantidad de segmentos ancho/alto
 
-    var base = new THREE.Mesh(baseG, material);
+    base = new THREE.Mesh(baseG, material_robot);
     base.position.set(0, 0, 0);
 
-    var eje = new THREE.Mesh(ejeG, material);
+    eje = new THREE.Mesh(ejeG, material_robot);
     eje.rotateZ(Math.PI/2);
 
-    var esparrago = new THREE.Mesh(esparragoG, material);
+    esparrago = new THREE.Mesh(esparragoG, material_robot);
     esparrago.position.set(0,50,0);
     esparrago.rotateY(Math.PI / 2);
 
-    var rotula = new THREE.Mesh(rotulaG, material);
+    rotula = new THREE.Mesh(rotulaG, material_robot);
     rotula.position.set(0, 120, 0);
 
-    var disco = new THREE.Mesh(discoG, material);
-    disco.position.set(0, 120, 0);
+    disco = new THREE.Mesh(discoG, material_robot);
+    disco.position.set(0, 0, 0);
 
-    var nervio1 = new THREE.Mesh(nervioG, material);
-    nervio1.position.set(-8, 166, 8);
-    var nervio2 = new THREE.Mesh(nervioG, material);
-    nervio2.position.set(8, 166, 8);
-    var nervio3 = new THREE.Mesh(nervioG, material);
-    nervio3.position.set(-8, 166, -8);
-    var nervio4 = new THREE.Mesh(nervioG, material);
-    nervio4.position.set(8, 166, -8);
+    nervio1 = new THREE.Mesh(nervioG, material_robot);
+    nervio1.position.set(-8, 46, 8);
+    nervio2 = new THREE.Mesh(nervioG, material_robot);
+    nervio2.position.set(8, 46, 8);
+    nervio3 = new THREE.Mesh(nervioG, material_robot);
+    nervio3.position.set(-8, 46, -8);
+    nervio4 = new THREE.Mesh(nervioG, material_robot);
+    nervio4.position.set(8, 46, -8);
 
-    var mano = new THREE.Mesh(manoG, material);
-    mano.position.set(0, 206, 0);
+    antebrazo.position.set(0, 120, 0)
+    mano = new THREE.Mesh(manoG, material_robot);
+    mano.position.set(0, 80, 0);
     mano.rotateZ(Math.PI/2);
 
     //Creamos y agregamos el plano base
-    material = new THREE.MeshBasicMaterial({ color: 'green', wireframe: true }); //Creamos el material
+    var material = new THREE.MeshBasicMaterial({ color: 'green', wireframe: true }); //Creamos el material
     var plano = new THREE.Mesh(suelo, material);
     plano.rotateX(-Math.PI/2);
     scene.add(plano);
     scene.add(new THREE.AxesHelper(1000));
 
     //Completamos y agregamos el robot y sus partes a la escena mediante el grafo de escena
-
-    mano.add(pinzaIz);
-    mano.add(pinzaDe);
+    
+    basePinzaIz.add(pinzaIz);
+    basePinzaDe.add(pinzaDe);
     mano.add(basePinzaIz);
     mano.add(basePinzaDe);
     antebrazo.add(disco);
@@ -237,41 +242,64 @@ function render(){
 function crearInterfaz() {
     var aspectRatio = window.innerWidth / window.innerHeight;
     //Interfaz de usuario
-    effectControl = {
+    var effectControl = {
         giroBase: 0,
         giroBrazo: 0,
-        giroAntebrazoZ: 0,
         giroAntebrazoY: 0,
-        giroPinzaZ: 0,
-        aperturaPinza: 0,
-        reiniciar: function () {
+        giroAntebrazoZ: 0,
+        giroPinza: 0,
+        separacionPinza: 6,
+        alambres: false,
+
+        Animar: function () {
             angulo = 0
             location.reload();
         },
-        color: "rgb(255,255,0)"
     }
     var gui = new GUI();
-    var sub = gui.addFolder("Controles Robot")
-    var effectControl
-    sub.add(effectControl, "giroBase", -180, 180, 1).name("Giro Base");
-    sub.add(effectControl, "giroBrazo", -45, 45, 1).name("Giro Brazo");
-    sub.add(effectControl, "giroAntebrazoZ", -180, 180, 1).name("Giro Antebrazo Z");
-    sub.add(effectControl, "giroAntebrazoY", -90, 90, 1).name("Giro Antebrazo Y");
-    sub.add(effectControl, "giroPinzaZ", -40, 220, 1).name("Giro Pinza");
-    sub.add(effectControl, "aperturaPinza", 0, 15, 1).name("Cierre pinza");
+    gui.title("Controles Robot")
+    gui.add(effectControl, "giroBase", -180, 180, 1).name("Giro Base").onChange((value)=>{
+        base.rotation.y = value * Math.PI / 180;
+    });
 
-    sub.add(effectControl, "reiniciar")
-    var sensorColor = sub.addColor(effectControl, "color").name("Color")
-    sensorColor.onChange(function (color) {
-        robot.traverse(function (hijo) {
-            if (hijo instanceof THREE.Mesh) {
-                hijo.material.color = new THREE.Color(color)
-            }
-        })
-    })
+
+    gui.add(effectControl, "giroBrazo", -45, 45, 1).name("Giro Brazo").onChange((value)=>{
+        brazo.rotation.x = value * Math.PI / 180;
+    });
+
+    gui.add(effectControl, "giroAntebrazoY", -180, 180, 1).name("Giro Antebrazo Y").onChange((value)=>{
+        antebrazo.rotation.y = value * Math.PI / 180;
+    });
+
+    gui.add(effectControl, "giroAntebrazoZ", -90, 90, 1).name("Giro Antebrazo Z").onChange((value)=>{
+        antebrazo.rotation.z = value * Math.PI / 180;
+    });
+
+    gui.add(effectControl, "giroPinza", -40, 220, 1).name("Giro Pinza").onChange((value)=>{
+        mano.rotation.x = -value * Math.PI / 180;
+    });
+
+    gui.add(effectControl, "separacionPinza", 0, 15, 1).name("Separación pinza").onChange((value)=>{
+        basePinzaIz.position.y = -value / 2 - 2;
+        basePinzaDe.position.y = value / 2 + 2;
+    });
+
+    gui.add(effectControl, "alambres").name("Alambres").onChange((value)=>{
+        material_robot.wireframe = value;
+    });
+
+    gui.add(effectControl, "Animar")
+
 }
 
 init();
 loadScene();
 crearInterfaz();
 render();
+var coords = { x: 0, y: 0 }; // Start at (0, 0)
+
+var tween = new TWEEN.Tween(coords).to({ x: 300, y: 200 }, 1000).easing(TWEEN.Easing.Quadratic.Out).onUpdate(()=>{
+    camera.position.x = coords.x
+    console.log("hola")
+}
+).start()
