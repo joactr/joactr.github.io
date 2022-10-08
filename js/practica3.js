@@ -228,7 +228,8 @@ function render(){
     renderer.setViewport(0, 0, window.innerWidth, window.innerHeight)
     renderer.render(scene, camera);
     //Agregamos el viewport y la cámara planta
-    renderer.setViewport(0, window.innerHeight*(3/4), Math.min(window.innerWidth, window.innerHeight) / 4, Math.min(window.innerWidth, window.innerHeight) / 4)
+    renderer.setViewport(0, window.innerHeight-Math.min(window.innerWidth, window.innerHeight) / 4, 
+                        Math.min(window.innerWidth, window.innerHeight) / 4, Math.min(window.innerWidth, window.innerHeight) / 4)
     renderer.render(scene, cameraPlanta);
 }
 

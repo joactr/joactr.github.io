@@ -2,7 +2,7 @@ import GUI from '../lib/lil-gui.module.min.js';
 import {TWEEN} from '../lib/tween.module.min.js'; 
 
 let renderer, scene, camera, cameraPlanta;
-let controls;
+let controls,gui;
 var material_robot,robot,suelo,base,esparrago,rotula,eje,mano,basePinzaDe,basePinzaIz,pinzaDe,pinzaIz,brazo,antebrazo;
 var disco,nervio1,nervio2,nervio3,nervio4;
 let L = 90;
@@ -22,7 +22,8 @@ function init(){
     var cameraTop = new THREE.PerspectiveCamera(90,aspectRatio,0.1,1000);
     camera.position.set(80,250,80);
     setCameras(aspectRatio);
-    window.addEventListener( 'resize', updateAspectRatio );
+    window.addEventListener( 'resize', updateAspectRatio ); //Relacion de aspecto al cambiar tamaño de ventana
+    window.addEventListener('keydown', moverRobot, false); //Usar flechas para mover robot
     controls = new THREE.OrbitControls( camera, renderer.domElement ); //Controles de la cámara con el raton
 	controls.target.set(0, 150, 0);
     //Se limita el zoom
@@ -30,8 +31,6 @@ function init(){
     controls.maxDistance = 500;
     camera.lookAt(new THREE.Vector3(0, 150, 0)); //Hace que la cámara mire al punto
     cameraTop.lookAt(new THREE.Vector3(0, 0, 0)); //Hace que la cámara mire al origen de coordenadas
-    
-
 }
 
 function updateAspectRatio() { //Por si cambia el tamaño de la ventana
@@ -43,23 +42,16 @@ function updateAspectRatio() { //Por si cambia el tamaño de la ventana
     camera.updateProjectionMatrix();
 
     //Actualizar cámara ortográfica
-    if (aspectRatio > 1) {
-        cameraPlanta.left = -L*ar
-        cameraPlanta.right = L*ar
-        cameraPlanta.top = L;
-        cameraPlanta.bottom = -L
-    } else {
-        cameraPlanta.left = -L
-        cameraPlanta.right = L
-        cameraPlanta.top = L/ar;
-        cameraPlanta.bottom = -L/ar
-    }
+    cameraPlanta.left = -L;
+    cameraPlanta.right = L;
+    cameraPlanta.top = L;
+    cameraPlanta.bottom = -L;
     cameraPlanta.updateProjectionMatrix();
     
 }
 
-function update(){
-
+function update(time){
+    TWEEN.update(time);
 }
 
 function setCameras(ar){ //Inicializa la cámara ortográfica de planta
@@ -228,6 +220,7 @@ function animate(){
 function render(){
     requestAnimationFrame(render);
     update();
+    
 
     renderer.clear(); //Borramos la pantalla
     
@@ -235,7 +228,8 @@ function render(){
     renderer.setViewport(0, 0, window.innerWidth, window.innerHeight)
     renderer.render(scene, camera);
     //Agregamos el viewport y la cámara planta
-    renderer.setViewport(0, window.innerHeight*(3/4), Math.min(window.innerWidth, window.innerHeight) / 4, Math.min(window.innerWidth, window.innerHeight) / 4)
+    renderer.setViewport(0, window.innerHeight-Math.min(window.innerWidth, window.innerHeight) / 4, 
+                        Math.min(window.innerWidth, window.innerHeight) / 4, Math.min(window.innerWidth, window.innerHeight) / 4)
     renderer.render(scene, cameraPlanta);
 }
 
@@ -251,55 +245,123 @@ function crearInterfaz() {
         separacionPinza: 6,
         alambres: false,
 
-        Animar: function () {
-            angulo = 0
-            location.reload();
+        animar: function () {
+
+            const abrirPinzaIz = new TWEEN.Tween( basePinzaIz.position ).
+                to( {y:-10}, 1000).interpolation( TWEEN.Interpolation.Bezier ).
+                onUpdate(value => {this.separacionPinza = -value.y-2});
+            const abrirPinzaDe = new TWEEN.Tween( basePinzaDe.position ).
+                to( {y:10}, 1000).interpolation( TWEEN.Interpolation.Bezier ).
+                onUpdate(value => {this.separacionPinza = value.y+2}).onStart(()=>abrirPinzaIz.start());
+
+            const bajarBrazo = new TWEEN.Tween( brazo.rotation ).
+                to( {x:Math.PI / 4}, 1000).interpolation( TWEEN.Interpolation.Bezier ).
+                onUpdate(value => {this.giroBrazo = value.x * 180 / Math.PI;});
+
+            const bajarAntebrazo = new TWEEN.Tween( antebrazo.rotation ).
+                to( {x:Math.PI / 3}, 1000).interpolation( TWEEN.Interpolation.Bezier ).
+                onUpdate(value => {this.giroAntebrazoZ = value.x * 180 / Math.PI;});
+
+            const girarBase = new TWEEN.Tween( base.rotation ).
+                to( {y:Math.PI / 2}, 1000).interpolation( TWEEN.Interpolation.Bezier ).
+                onUpdate(value => {this.giroBase = value.y * 180 / Math.PI;});
+            
+            const subirAntebrazo = new TWEEN.Tween( antebrazo.rotation ).
+                to( {x:0}, 1000).interpolation( TWEEN.Interpolation.Bezier ).
+                onUpdate(value => {this.giroAntebrazoZ = value.x * 180 / Math.PI;}).onStart(()=>girarBase.start());
+
+            const cerrarPinzaIz = new TWEEN.Tween( basePinzaIz.position ).
+                to( {y:-2}, 1000).interpolation( TWEEN.Interpolation.Bezier ).
+                onUpdate(value => {this.separacionPinza = -value.y});
+            const cerrarPinzaDe = new TWEEN.Tween( basePinzaDe.position ).
+                to( {y:2}, 1000).interpolation( TWEEN.Interpolation.Bezier ).
+                onUpdate(value => {this.separacionPinza = value.y}).onStart(()=>cerrarPinzaIz.start());
+
+            const girarAntebrazoY = new TWEEN.Tween( antebrazo.rotation ).
+                to( {y:Math.PI}, 1000).interpolation( TWEEN.Interpolation.Bezier ).
+                onUpdate(value => {this.giroAntebrazoY = value.y});
+
+            const subirBrazo = new TWEEN.Tween( brazo.rotation ).
+                to( {x:0}, 1000).interpolation( TWEEN.Interpolation.Bezier ).
+                onUpdate(value => {this.giroBrazo = value.x * 180 / Math.PI;});
+
+
+            
+            abrirPinzaDe.chain(bajarBrazo);
+            bajarBrazo.chain(bajarAntebrazo);
+            bajarAntebrazo.chain(subirAntebrazo);
+            subirAntebrazo.chain(cerrarPinzaDe);
+            cerrarPinzaDe.chain(girarAntebrazoY);
+            girarAntebrazoY.chain(subirBrazo);
+
+            abrirPinzaDe.start();
+        
         },
     }
-    var gui = new GUI();
+    gui = new GUI();
     gui.title("Controles Robot")
     gui.add(effectControl, "giroBase", -180, 180, 1).name("Giro Base").onChange((value)=>{
         base.rotation.y = value * Math.PI / 180;
-    });
+    }).listen();
 
 
     gui.add(effectControl, "giroBrazo", -45, 45, 1).name("Giro Brazo").onChange((value)=>{
         brazo.rotation.x = value * Math.PI / 180;
-    });
+    }).listen();
 
     gui.add(effectControl, "giroAntebrazoY", -180, 180, 1).name("Giro Antebrazo Y").onChange((value)=>{
         antebrazo.rotation.y = value * Math.PI / 180;
-    });
+    }).listen();
 
     gui.add(effectControl, "giroAntebrazoZ", -90, 90, 1).name("Giro Antebrazo Z").onChange((value)=>{
-        antebrazo.rotation.z = value * Math.PI / 180;
-    });
+        antebrazo.rotation.x = value * Math.PI / 180;
+    }).listen();
 
     gui.add(effectControl, "giroPinza", -40, 220, 1).name("Giro Pinza").onChange((value)=>{
         mano.rotation.x = -value * Math.PI / 180;
-    });
+    }).listen();
 
     gui.add(effectControl, "separacionPinza", 0, 15, 1).name("Separación pinza").onChange((value)=>{
-        basePinzaIz.position.y = -value / 2 - 2;
-        basePinzaDe.position.y = value / 2 + 2;
-    });
+        basePinzaIz.position.y = -value-2;
+        basePinzaDe.position.y = value+2;
+    }).listen();
 
     gui.add(effectControl, "alambres").name("Alambres").onChange((value)=>{
         material_robot.wireframe = value;
-    });
+    }).listen();
 
-    gui.add(effectControl, "Animar")
+    gui.add(effectControl, "animar").name("Animar").onChange((value)=>{
+        console.log("Hola")
+    }).listen();
+}
 
+function moverRobot(event) { //Mueve el robot con las flechas del teclado
+    const keyName = event.key;
+    switch (keyName) {
+        case 'ArrowUp':
+            new TWEEN.Tween( robot.position ).
+            to( {z:robot.position.z-10}, 100).interpolation( TWEEN.Interpolation.Bezier ).
+            onUpdate(value => {robot.position.z = value.z}).start();
+            break;
+        case 'ArrowDown':
+            new TWEEN.Tween( robot.position ).
+            to( {z:robot.position.z+10}, 100).interpolation( TWEEN.Interpolation.Bezier ).
+            onUpdate(value => {robot.position.z = value.z}).start();
+            break;
+        case 'ArrowLeft':
+            new TWEEN.Tween( robot.position ).
+            to( {x:robot.position.x-10}, 100).interpolation( TWEEN.Interpolation.Bezier ).
+            onUpdate(value => {robot.position.x = value.x}).start();
+            break;
+        case 'ArrowRight':
+            new TWEEN.Tween( robot.position ).
+            to( {x:robot.position.x+10}, 100).interpolation( TWEEN.Interpolation.Bezier ).
+            onUpdate(value => {robot.position.x = value.x}).start();
+            break;
+    }
 }
 
 init();
 loadScene();
 crearInterfaz();
 render();
-var coords = { x: 0, y: 0 }; // Start at (0, 0)
-
-var tween = new TWEEN.Tween(coords).to({ x: 300, y: 200 }, 1000).easing(TWEEN.Easing.Quadratic.Out).onUpdate(()=>{
-    camera.position.x = coords.x
-    console.log("hola")
-}
-).start()
