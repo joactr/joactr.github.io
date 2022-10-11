@@ -3,8 +3,9 @@ import {TWEEN} from '../lib/tween.module.min.js';
 import * as CANNON from '../lib/cannon-es.js';
 
 let renderer, scene, camera,materialPlano;
-let controls,mapa,world,planoBase,sphereBody, protagonista, mapaBody;
+let mapa,world,planoBase,sphereBody, protagonista, mapaBody;
 let flechaArriba,flechaAbajo,flechaIzquierda,flechaDerecha;
+let cameraOffset = new THREE.Vector3(80,80,80)
 
 
 function init(){
@@ -23,15 +24,10 @@ function init(){
     window.addEventListener( 'resize', updateAspectRatio ); //Relacion de aspecto al cambiar tamaño de ventana
     window.addEventListener('keydown', movermapa, false); //Usar flechas para mover mapa
     window.addEventListener('keyup', soltarTecla, false); //Usar flechas para mover mapa
-    controls = new THREE.OrbitControls( camera, renderer.domElement ); //Controles de la cámara con el raton
-	controls.target.set(0, 0, 0);
-    //Se limita el zoom
-    controls.minDistance = 70;
-    controls.maxDistance = 500;
     camera.lookAt(new THREE.Vector3(0, 0, 0)); //Hace que la cámara mire al punto
     cameraTop.lookAt(new THREE.Vector3(0, 0, 0)); //Hace que la cámara mire al origen de coordenadas
     world = new CANNON.World({
-        gravity: new CANNON.Vec3(0, -500.82, 0), // m/s²
+        gravity: new CANNON.Vec3(0, -300.82, 0), // m/s²
       })
 }
 
@@ -45,7 +41,7 @@ function updateAspectRatio() { //Por si cambia el tamaño de la ventana
 }
 
 function loadScene(){
-    materialPlano = new THREE.MeshNormalMaterial({ wireframe: false }); //Creamos el material
+    materialPlano = new THREE.MeshNormalMaterial({ wireframe: true }); //Creamos el material
     mapa = new THREE.Object3D();
     var planoBaseG = new THREE.BoxGeometry(120, 12, 120);
     planoBase = new THREE.Mesh(planoBaseG, materialPlano);
@@ -60,11 +56,12 @@ function loadScene(){
         mass: 1, // kg
         shape: new CANNON.Sphere(5),
     })
+    sphereBody.linearDamping = 0.31;
     sphereBody.position.set(0,16,0);
 
     mapaBody = new CANNON.Body({
         type: CANNON.Body.STATIC,
-        shape: new CANNON.Box(new CANNON.Vec3(60, 12, 60))
+        shape: new CANNON.Box(new CANNON.Vec3(60, 12, 60)),
     })
     mapaBody.position.set(0,-6,0);
 
@@ -79,7 +76,7 @@ function loadScene(){
 }
 
 function animate(time){
-    var valorGiro = 0.022
+    var valorGiro = 0.018
     var valorGiroRetorno = 0.015
     if(flechaArriba && mapa.rotation.x > -0.785398){
         mapa.rotateOnWorldAxis(new THREE.Vector3(1,0,0), -valorGiro )
@@ -100,8 +97,11 @@ function animate(time){
         mapa.rotateOnAxis(new THREE.Vector3(0,0,1), -Math.sign(mapa.rotation.z)*valorGiroRetorno )
     }
     // Run the simulation independently of framerate every 1 / 60 ms
+    protagonista.quaternion.copy(sphereBody.quaternion)
     protagonista.position.copy(sphereBody.position)
     mapaBody.quaternion.setFromEuler(mapa.rotation.x,0,mapa.rotation.z);
+    camera.position.copy(sphereBody.position).add(cameraOffset); //Cámara sigue a la bola
+    camera.lookAt = sphereBody.position //Cámara mira a la bola
     world.fixedStep()
     TWEEN.update(time);
 }
