@@ -2,7 +2,7 @@ import GUI from '../lib/lil-gui.module.min.js';
 import {TWEEN} from '../lib/tween.module.min.js'; 
 import * as CANNON from '../lib/cannon-es.js';
 
-let renderer, scene, camera,materialPlano;
+let renderer, scene, camera,materialPlano,materialProta;
 let mapa,world,planoBase,sphereBody, protagonista, mapaBody;
 let flechaArriba,flechaAbajo,flechaIzquierda,flechaDerecha;
 let cameraOffset = new THREE.Vector3(80,80,80)
@@ -42,6 +42,9 @@ function updateAspectRatio() { //Por si cambia el tamaño de la ventana
 
 function loadScene(){
     materialPlano = new THREE.MeshNormalMaterial({ wireframe: true }); //Creamos el material
+    materialProta = new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load(
+        '../textures/texturaProta.jpeg'
+    )})
     mapa = new THREE.Object3D();
     var planoBaseG = new THREE.BoxGeometry(120, 12, 120);
     planoBase = new THREE.Mesh(planoBaseG, materialPlano);
@@ -50,7 +53,7 @@ function loadScene(){
     planoBase2.position.set(-100,0,-100)
 
     var protagonistaG = new THREE.SphereGeometry( 5, 10, 10 );
-    protagonista = new THREE.Mesh(protagonistaG, materialPlano);
+    protagonista = new THREE.Mesh(protagonistaG, materialProta);
 
     sphereBody = new CANNON.Body({
         mass: 1, // kg
