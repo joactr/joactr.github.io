@@ -6,6 +6,7 @@ let renderer, scene, camera,materialPlano,materialProta;
 let mapa,world,planoBase,sphereBody, protagonista, mapaBody;
 let flechaArriba,flechaAbajo,flechaIzquierda,flechaDerecha;
 let cameraOffset = new THREE.Vector3(80,80,80)
+let timeAnt = 0;
 
 
 function init(){
@@ -78,9 +79,9 @@ function loadScene(){
 
 }
 
-function animate(time){
-    var valorGiro = 0.018
-    var valorGiroRetorno = 0.015
+function animate(time,timeAnt){
+    var valorGiro = 0.013 * (time-timeAnt)/10
+    var valorGiroRetorno = 0.010 * (time-timeAnt)/10
     if(flechaArriba && mapa.rotation.x > -0.785398){
         mapa.rotateOnWorldAxis(new THREE.Vector3(1,0,0), -valorGiro )
     }
@@ -109,9 +110,12 @@ function animate(time){
     TWEEN.update(time);
 }
 
-function render(){
+function render(time){
+    
     requestAnimationFrame(render);
-    animate();
+    animate(time,timeAnt);
+    timeAnt = time
+
 
     renderer.clear(); //Borramos la pantalla
     
