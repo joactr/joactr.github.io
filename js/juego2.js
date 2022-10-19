@@ -52,7 +52,7 @@ function createScene(){
     sceneWidth=window.innerWidth;
     sceneHeight=window.innerHeight;
     scene = new THREE.Scene();//the 3d scene
-    scene.fog = new THREE.FogExp2( 0xf0fff0, 0.14 );
+    scene.fog = new THREE.FogExp2( 0xf0fff0, 0.08 );
     camera = new THREE.PerspectiveCamera( 60, sceneWidth / sceneHeight, 0.1, 1000 );//perspective camera
     renderer = new THREE.WebGLRenderer({alpha:true});//renderer with transparent backdrop
     renderer.setClearColor(0xfffafa, 1); 
@@ -93,8 +93,9 @@ function createScene(){
 	scoreText.style.height = 100;
 	//scoreText.style.backgroundColor = "blue";
 	scoreText.innerHTML = "0";
-	scoreText.style.top = 10 + 'px';
-	scoreText.style.left = 100 + 'px';
+	scoreText.style.top = 30 + 'px';
+	scoreText.style.left = 200 + 'px';
+	scoreText.style.color = 'white';
 	document.body.appendChild(scoreText);
 }
 function addExplosion(){
@@ -290,13 +291,13 @@ function update(time){
     	addPathTree();
     	if(!hasCollided){
 			score+=2*treeReleaseInterval;
-			scoreText.innerHTML=score.toString();
+			scoreText.innerHTML="Puntuación: " + score.toString() ;
 		}
     }
     doTreeLogic();
     doExplosionLogic();
     render();
-	requestAnimationFrame(update);//request next update
+	requestAnimationFrame(update);
 }
 function doTreeLogic(){
 	var oneTree;
