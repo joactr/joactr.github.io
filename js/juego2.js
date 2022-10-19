@@ -2,7 +2,7 @@ import {GLTFLoader} from '../lib/GLTFLoader.module.js'
 import * as SkeletonUtils from '../lib/SkeletonUtils.js'
 window.addEventListener('load', init, false);
 
-var sceneWidth,sceneHeight,camera,scene,renderer,sun;
+var sceneWidth,sceneHeight,camera,scene,renderer,luzSol;
 var ground,orbitControl,rollingGroundSphere,heroSphere;
 var rollingSpeed=0.004;
 var heroRollingSpeed;
@@ -122,7 +122,7 @@ function createScene(){
     sceneWidth=window.innerWidth;
     sceneHeight=window.innerHeight;
     scene = new THREE.Scene();//the 3d scene
-    scene.fog = new THREE.FogExp2( 0xf0fff0, 0.08 );
+    scene.fog = new THREE.FogExp2( 0xf0fff0, 0.04 );
     camera = new THREE.PerspectiveCamera( 60, sceneWidth / sceneHeight, 0.1, 1000 );//perspective camera
     renderer = new THREE.WebGLRenderer({alpha:true});//renderer with transparent backdrop
     renderer.setClearColor(0xfffafa, 1); 
@@ -138,8 +138,10 @@ function createScene(){
 		// called when the resource is loaded
 		function ( gltf ) {
 			gltf.scene.scale.set(escalaMonstruo,escalaMonstruo,escalaMonstruo)
-			gltf.scene.position.set(0,1.8,0)
+			gltf.scene.position.set(0,1.9,0)
 			godzilla = gltf.scene;
+			godzilla.receiveShadow = true;
+			godzilla.castShadow = true;
 			addWorld();
 			addHero();
 			addLight();
@@ -158,19 +160,10 @@ function createScene(){
 		}
 	);
 
-	camera.position.z = 6.5;
-	camera.position.y = 3.5;
-	orbitControl = new THREE.OrbitControls( camera, renderer.domElement );//helper to rotate around in scene
-	orbitControl.addEventListener( 'change', render );
-	//orbitControl.enableDamping = true;
-	//orbitControl.dampingFactor = 0.8;
-	orbitControl.noKeys = true;
-	orbitControl.noPan = true;
-	orbitControl.enableZoom = false;
-	orbitControl.minPolarAngle = 1.1;
-	orbitControl.maxPolarAngle = 1.1;
-	orbitControl.minAzimuthAngle = -0.2;
-	orbitControl.maxAzimuthAngle = 0.2;
+	camera.position.set(0,3.5,6.5);
+	camera.rotation.x = -0.5
+	console.log(camera)
+
 	
 	window.addEventListener('resize', updateAspectRatio, false);// Función de re-escalado
 
@@ -277,24 +270,39 @@ function addWorld(){
     )})
 	rollingGroundSphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
 	rollingGroundSphere.receiveShadow = true;
-	rollingGroundSphere.castShadow=false;
 	rollingGroundSphere.rotation.z=-Math.PI/2;
 	scene.add( rollingGroundSphere ); //Agregamos la tierra a la escena
 	rollingGroundSphere.position.set(rollingGroundSphere.position.x,-24,2) //Situamos la tierra
 	addWorldTrees();
 }
 function addLight(){
-	var hemisphereLight = new THREE.HemisphereLight(0xfffafa,0x000000, .9)
+	var hemisphereLight = new THREE.HemisphereLight(0xfffafa,0x000000, 0.7)
 	scene.add(hemisphereLight);
-	sun = new THREE.DirectionalLight( 0xcdc1c5, 0.9);
-	sun.position.set( 12,6,-7 );
-	sun.castShadow = true;
-	scene.add(sun);
-	//Set up shadow properties for the sun light
-	sun.shadow.mapSize.width = 256;
-	sun.shadow.mapSize.height = 256;
-	sun.shadow.camera.near = 0.5;
-	sun.shadow.camera.far = 50 ;
+	luzSol = new THREE.DirectionalLight( 0xC8C9AB, 0.9);
+	luzSol.position.set( 12,6,-7 );
+	luzSol.castShadow = true;
+	scene.add(luzSol);
+	//Set up shadow properties for the luzSol light
+	luzSol.shadow.mapSize.width = 256;
+	luzSol.shadow.mapSize.height = 256;
+	luzSol.shadow.camera.near = 0.5;
+	luzSol.shadow.camera.far = 50 ;
+
+    var focal = new THREE.SpotLight('white', 0.05);
+    focal.position.set(0, 40, 10);
+    focal.target.position.set(0, 0, 0);
+    focal.angle = Math.PI / 7;
+    focal.penumbra = 0.2;
+
+    focal.shadow.camera.near = 20;
+    focal.shadow.camera.far = 1500;
+    focal.shadow.camera.fov = 4000;
+    focal.shadow.mapSize.width = 10000;
+    focal.shadow.mapSize.height = 10000;
+
+    scene.add(focal.target);
+    focal.castShadow = true;
+    scene.add(focal);
 }
 function addPathTree(){
 	var options=[0,1,2];
@@ -341,7 +349,9 @@ function addTree(inPath, row, isLeft){
 	rollingGroundSphere.add(newTree);
 }
 function newGodzilla(){
-	return SkeletonUtils.clone(godzilla);
+	var g = SkeletonUtils.clone(godzilla);
+	g.castShadow = true;
+	return g
 }
 
 function update(time,timeAnt){
