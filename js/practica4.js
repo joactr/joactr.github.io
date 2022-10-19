@@ -361,7 +361,9 @@ function moverRobot(event) { //Mueve el robot con las flechas del teclado
     }
 }
 
-init();
-loadScene();
-crearInterfaz();
-render();
+function start(){
+    init();
+    loadScene();
+    crearInterfaz();
+    render();
+}
