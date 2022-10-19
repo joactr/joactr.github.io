@@ -28,9 +28,7 @@ var particleGeometry;
 var particleCount=20;
 var explosionPower =1.06;
 var particles;
-var stats;
-var scoreText;
-var score;
+var stats,scoreText,score;
 var hasCollided;
 
 function init() {
@@ -84,7 +82,7 @@ function createScene(){
 	orbitControl.minAzimuthAngle = -0.2;
 	orbitControl.maxAzimuthAngle = 0.2;
 	
-	window.addEventListener('resize', onWindowResize, false);//resize callback
+	window.addEventListener('resize', updateAspectRatio, false);// Función de re-escalado
 
 	document.onkeydown = handleKeyDown;
 	
@@ -154,10 +152,8 @@ function handleKeyDown(keyEvent){
 	}
 }
 function addHero(){
-	const textureloader = new THREE.TextureLoader();
 	var sphereGeometry = new THREE.SphereGeometry( heroRadius, 80);
-	var sphereMaterial = new THREE.MeshStandardMaterial( { color: 0xe5f2f2 ,shading:THREE.FlatShading} )
-	sphereMaterial = new THREE.MeshLambertMaterial({ map: textureloader.load(
+	var sphereMaterial = new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load(
         '../textures/luna.jpg'
     )})
 	jumping=false;
@@ -165,57 +161,24 @@ function addHero(){
 	heroSphere.receiveShadow = true;
 	heroSphere.castShadow=true;
 	scene.add( heroSphere );
-	heroSphere.position.y=heroBaseY;
-	heroSphere.position.z=4.8;
 	currentLane=middleLane;
-	heroSphere.position.x=currentLane;
+	heroSphere.position.set(currentLane,heroBaseY,4.8)
 }
 function addWorld(){
-	const textureloader = new THREE.TextureLoader();
-	var sides=40;
-	var tiers=40;
-	var sphereGeometry = new THREE.SphereGeometry( worldRadius, sides,tiers);
-	var sphereMaterial = new THREE.MeshStandardMaterial( { color: 0xfffafa ,shading:THREE.FlatShading} )
-	sphereMaterial = new THREE.MeshLambertMaterial({ map: textureloader.load(
-        '../textures/tierra.jpg'
+	new THREE.TextureLoader().load('../images/space.jpeg' , function(texture)
+	{
+	 scene.background = texture;  
+	});
+	var sphereGeometry = new THREE.SphereGeometry( worldRadius, 100,100);
+	var sphereMaterial = new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load(
+        '../textures/tierra_12k.jpg'
     )})
-	var vertexIndex;
-	var vertexVector= new THREE.Vector3();
-	var nextVertexVector= new THREE.Vector3();
-	var firstVertexVector= new THREE.Vector3();
-	var offset= new THREE.Vector3();
-	var currentTier=1;
-	var lerpValue=0.5;
-	var heightValue;
-	var maxHeight=0.07;
-	/*for(var j=1;j<tiers-2;j++){
-		currentTier=j;
-		for(var i=0;i<sides;i++){
-			vertexIndex=(currentTier*sides)+1;
-			vertexVector=sphereGeometry.vertices[i+vertexIndex].clone();
-			if(j%2!==0){
-				if(i==0){
-					firstVertexVector=vertexVector.clone();
-				}
-				nextVertexVector=sphereGeometry.vertices[i+vertexIndex+1].clone();
-				if(i==sides-1){
-					nextVertexVector=firstVertexVector;
-				}
-				lerpValue=(Math.random()*(0.75-0.25))+0.25;
-				vertexVector.lerp(nextVertexVector,lerpValue);
-			}
-			heightValue=(Math.random()*maxHeight)-(maxHeight/2);
-			offset=vertexVector.clone().normalize().multiplyScalar(heightValue);
-			sphereGeometry.vertices[i+vertexIndex]=(vertexVector.add(offset));
-		}
-	}*/
 	rollingGroundSphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
 	rollingGroundSphere.receiveShadow = true;
 	rollingGroundSphere.castShadow=false;
 	rollingGroundSphere.rotation.z=-Math.PI/2;
-	scene.add( rollingGroundSphere );
-	rollingGroundSphere.position.y=-24;
-	rollingGroundSphere.position.z=2;
+	scene.add( rollingGroundSphere ); //Agregamos la tierra a la escena
+	rollingGroundSphere.position.set(rollingGroundSphere.position.x,-24,2) //Situamos la tierra
 	addWorldTrees();
 }
 function addLight(){
@@ -300,7 +263,7 @@ function createTree(){
 	treeTop.receiveShadow=false;
 	treeTop.position.y=0.9;
 	treeTop.rotation.y=(Math.random()*(Math.PI));*/
-	var treeTrunkGeometry = new THREE.CylinderGeometry( 0.1, 0.1,0.5);
+	var treeTrunkGeometry = new THREE.CylinderGeometry( 0.1, 0.1,0.9);
 	var trunkMaterial = new THREE.MeshStandardMaterial( { color: 0x886633,shading:THREE.FlatShading  } );
 	var treeTrunk = new THREE.Mesh( treeTrunkGeometry, trunkMaterial );
 	treeTrunk.position.y=0.25;
@@ -308,51 +271,6 @@ function createTree(){
 	tree.add(treeTrunk);
 	//tree.add(treeTop);
 	return tree;
-}
-function blowUpTree(vertices,sides,currentTier,scalarMultiplier,odd){
-	var vertexIndex;
-	var vertexVector= new THREE.Vector3();
-	var midPointVector=vertices[0].clone();
-	var offset;
-	for(var i=0;i<sides;i++){
-		vertexIndex=(currentTier*sides)+1;
-		vertexVector=vertices[i+vertexIndex].clone();
-		midPointVector.y=vertexVector.y;
-		offset=vertexVector.sub(midPointVector);
-		if(odd){
-			if(i%2===0){
-				offset.normalize().multiplyScalar(scalarMultiplier/6);
-				vertices[i+vertexIndex].add(offset);
-			}else{
-				offset.normalize().multiplyScalar(scalarMultiplier);
-				vertices[i+vertexIndex].add(offset);
-				vertices[i+vertexIndex].y=vertices[i+vertexIndex+sides].y+0.05;
-			}
-		}else{
-			if(i%2!==0){
-				offset.normalize().multiplyScalar(scalarMultiplier/6);
-				vertices[i+vertexIndex].add(offset);
-			}else{
-				offset.normalize().multiplyScalar(scalarMultiplier);
-				vertices[i+vertexIndex].add(offset);
-				vertices[i+vertexIndex].y=vertices[i+vertexIndex+sides].y+0.05;
-			}
-		}
-	}
-}
-function tightenTree(vertices,sides,currentTier){
-	var vertexIndex;
-	var vertexVector= new THREE.Vector3();
-	var midPointVector=vertices[0].clone();
-	var offset;
-	for(var i=0;i<sides;i++){
-		vertexIndex=(currentTier*sides)+1;
-		vertexVector=vertices[i+vertexIndex].clone();
-		midPointVector.y=vertexVector.y;
-		offset=vertexVector.sub(midPointVector);
-		offset.normalize().multiplyScalar(0.06);
-		vertices[i+vertexIndex].sub(offset);
-	}
 }
 
 function update(time){
@@ -440,8 +358,7 @@ function gameOver () {
   //cancelAnimationFrame( globalRenderID );
   //window.clearInterval( powerupSpawnIntervalID );
 }
-function onWindowResize() {
-	//resize & align
+function updateAspectRatio() { //Se asegura que la cámara no se distorsione al modificar el aspect ratio
 	sceneHeight = window.innerHeight;
 	sceneWidth = window.innerWidth;
 	renderer.setSize(sceneWidth, sceneHeight);
