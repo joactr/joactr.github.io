@@ -2,8 +2,8 @@ import {GLTFLoader} from '../lib/GLTFLoader.module.js'
 import * as SkeletonUtils from '../lib/SkeletonUtils.js'
 window.addEventListener('load', init, false);
 
-var sceneWidth,sceneHeight,camera,scene,renderer,luzSol;
-var ground,orbitControl,rollingGroundSphere,heroSphere;
+var sceneWidth,sceneHeight,camera,scene,renderer,luzSol,img;
+var rollingGroundSphere,heroSphere, animFrame;
 var rollingSpeed=0.004;
 var heroRollingSpeed;
 var worldRadius=26;
@@ -11,7 +11,6 @@ var heroRadius=0.2;
 var sphericalHelper;
 var pathAngleValues;
 var heroBaseY=2;
-var bounceValue=0.1;
 var gravity=0.005;
 var leftLane=-1;
 var rightLane=1;
@@ -20,29 +19,22 @@ var currentLane;
 var laneChangeSpeed = 7;
 var clock,clock2;
 var escalaMonstruo = 0.00125;
-var jumping;
-var treeReleaseInterval=0.35;
-var lastTreeReleaseTime=0;
-var treesInPath;
-var treesPool;
-var particleGeometry;
-var particleCount=20;
-var explosionPower =1.06;
-var particles;
+var godzillaReleaseInterval=0.35;
+var godzillasInPath;
+var godzillasPool;
 var stats,scoreText,score,botonFacil,botonNormal,botonDificil, godzilla;
 var hasCollided, enPartida = false;
-let timeAnt = 0;
 
 function menu(dificultad){
 	if(dificultad === "facil"){
 		rollingSpeed = 0.003;
-		treeReleaseInterval=0.5;
+		godzillaReleaseInterval=0.5;
 	}else if(dificultad === "facil"){
 		rollingSpeed = 0.004;
-		treeReleaseInterval=0.35;
+		godzillaReleaseInterval=0.35;
 	}else{
 		rollingSpeed = 0.005;
-		treeReleaseInterval=0.28;
+		godzillaReleaseInterval=0.28;
 	}
 	clock2.start();
 	newGodzillasPool();
@@ -50,6 +42,11 @@ function menu(dificultad){
 	botonFacil.remove();
 	botonNormal.remove();
 	botonDificil.remove();
+	img.style.width = "100px";
+	img.style.height = "100px";
+	img.style.left = "auto";
+	img.style.right = "1px";
+	img.style.top = "2px";
 
 }
 
@@ -96,23 +93,23 @@ function botonesInicio(){ //Crea los botones de inicio y los estiliza con css
 	document.body.appendChild(botonFacil);
 	document.body.appendChild(botonNormal);
 	document.body.appendChild(botonDificil);
+
+	img = document.createElement('img');
+	img.src = '../textures/logoKaiju.png';
+	img.style.position = 'absolute';
+	img.style.width = "200px";
+	img.style.height = "200px";
+	img.style.left = "calc(50% - 100px)";
+	img.style.top = "2px";
+	document.body.appendChild(img);
 }
 
 function init(time) {
-	// set up the scene
-	createScene();
-
-	
-	
-}
-
-function createScene(){
 	var audio = new Audio('../sounds/ost.mp3');
-	audio.volume = 0.4;
 	hasCollided=false;
 	score=0;
-	treesInPath=[];
-	treesPool=[];
+	godzillasInPath=[];
+	godzillasPool=[];
 	clock=new THREE.Clock();
 	clock.start();
 	clock2=new THREE.Clock();
@@ -132,29 +129,24 @@ function createScene(){
 	document.body.appendChild(renderer.domElement);
 	stats = new Stats();
 	document.body.appendChild(stats.dom);
-	new GLTFLoader().load(
-		// resource URL
-		'../models/godzilla.glb',
-		// called when the resource is loaded
+	new GLTFLoader().load('../models/godzilla.glb',
 		function ( gltf ) {
 			gltf.scene.scale.set(escalaMonstruo,escalaMonstruo,escalaMonstruo)
 			gltf.scene.position.set(0,1.9,0)
 			godzilla = gltf.scene;
-			godzilla.receiveShadow = true;
-			godzilla.castShadow = true;
+			gltf.scene.traverse( function( node ) { //Hace que pueda tener y recibir sombras
+				if ( node.isMesh ) { node.castShadow = true; }
+			} );
 			addWorld();
 			addHero();
 			addLight();
-			addExplosion();
 			botonesInicio(); //Crea los botones de selección de dificultad
 
 			update();
 		},
-		// called while loading is progressing
 		function ( xhr ) {
 			console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
 		},
-		// called when loading has errors
 		function ( error ) {
 			console.log( 'An error happened' );
 		}
@@ -171,52 +163,33 @@ function createScene(){
 	
 	scoreText = document.createElement('div');
 	scoreText.style.position = 'absolute';
-	//text2.style.zIndex = 1;    // if you still don't see the label, try uncommenting this
 	scoreText.style.width = 100;
 	scoreText.style.height = 100;
-	//scoreText.style.backgroundColor = "blue";
 	scoreText.innerHTML = "0";
-	scoreText.style.top = 30 + 'px';
+	scoreText.style.top = 10 + 'px';
 	scoreText.style.left = 200 + 'px';
 	scoreText.style.color = 'white';
+	scoreText.style.fontSize = "28px";
+	scoreText.style.fontFamily = "fantasy";
 	document.body.appendChild(scoreText);
-	audio.addEventListener("canplaythrough", () => {
+	audio.addEventListener("canplaythrough", () => { //Navegador no permite sonido hasta no hacer click
 		audio.play().catch(e => {
 		   window.addEventListener('click', () => {
-				
 				audio.play();
-			  
 		   }, { once: true })
 		})
 	 });
-
-
 }
-function addExplosion(){
-	/*particleGeometry = new THREE.BufferGeometry();
-	for (var i = 0; i < particleCount; i ++ ) {
-		var vertex = new THREE.Vector3();
-		particleGeometry.vertices.push( vertex );
-	}
-	var pMaterial = new THREE.ParticleBasicMaterial({
-	  color: 0xfffafa,
-	  size: 0.2
-	});
-	particles = new THREE.Points( particleGeometry, pMaterial );
-	scene.add( particles );
-	particles.visible=false;*/
-}
+
 function newGodzillasPool(){
-	var maxTreesInPool=10;
-	var newTree;
-	for(var i=0; i<maxTreesInPool;i++){
-		newTree=newGodzilla();
-		treesPool.push(newTree);
+	var maxgodzillasInPool=10;
+	var newgodzilla;
+	for(var i=0; i<maxgodzillasInPool;i++){
+		newgodzilla=newGodzilla();
+		godzillasPool.push(newgodzilla);
 	}
 }
 function handleKeyDown(keyEvent){
-	if(jumping)return;
-	var validMove=true;
 	if ( keyEvent.keyCode === 37) {//left
 		if(currentLane==middleLane){
 			currentLane=leftLane;
@@ -233,25 +206,15 @@ function handleKeyDown(keyEvent){
 		}else{
 			validMove=false;	
 		}
-	}else{
-		if ( keyEvent.keyCode === 38){//up, jump
-			bounceValue=0.1;
-			jumping=true;
-		}
-		validMove=false;
 	}
 	//heroSphere.position.x=currentLane;
-	if(validMove){
-		jumping=true;
-		bounceValue=0.06;
-	}
 }
+
 function addHero(){
 	var sphereGeometry = new THREE.SphereGeometry( heroRadius, 80);
 	var sphereMaterial = new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load(
         '../textures/luna.jpg'
     )})
-	jumping=false;
 	heroSphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
 	heroSphere.receiveShadow = true;
 	heroSphere.castShadow=true;
@@ -259,6 +222,7 @@ function addHero(){
 	currentLane=middleLane;
 	heroSphere.position.set(currentLane,heroBaseY,4.8)
 }
+
 function addWorld(){
 	new THREE.TextureLoader().load('../images/space.jpeg' , function(texture)
 	{
@@ -273,7 +237,7 @@ function addWorld(){
 	rollingGroundSphere.rotation.z=-Math.PI/2;
 	scene.add( rollingGroundSphere ); //Agregamos la tierra a la escena
 	rollingGroundSphere.position.set(rollingGroundSphere.position.x,-24,2) //Situamos la tierra
-	addWorldTrees();
+	addWorldgodzillas();
 }
 function addLight(){
 	var hemisphereLight = new THREE.HemisphereLight(0xfffafa,0x000000, 0.7)
@@ -304,34 +268,34 @@ function addLight(){
     focal.castShadow = true;
     scene.add(focal);
 }
-function addPathTree(){
+function addPathgodzilla(){
 	var options=[0,1,2];
 	var lane= Math.floor(Math.random()*3);
-	addTree(true,lane);
+	addgodzilla(true,lane);
 	options.splice(lane,1);
 	if(Math.random()>0.5){
 		lane= Math.floor(Math.random()*2);
-		addTree(true,options[lane]);
+		addgodzilla(true,options[lane]);
 	}
 }
-function addWorldTrees(){
-	var numTrees=36;
+function addWorldgodzillas(){
+	var numgodzillas=36;
 	var gap=6.28/36;
-	for(var i=0;i<numTrees;i++){
-		addTree(false,i*gap, true);
-		addTree(false,i*gap, false);
+	for(var i=0;i<numgodzillas;i++){
+		addgodzilla(false,i*gap, true);
+		addgodzilla(false,i*gap, false);
 	}
 }
-function addTree(inPath, row, isLeft){
-	var newTree;
+function addgodzilla(inPath, row, isLeft){
+	var newgodzilla;
 	if(inPath){
-		if(treesPool.length==0)return;
-		newTree=treesPool.pop();
-		newTree.visible=true;
-		treesInPath.push(newTree);
+		if(godzillasPool.length==0)return;
+		newgodzilla=godzillasPool.pop();
+		newgodzilla.visible=true;
+		godzillasInPath.push(newgodzilla);
 		sphericalHelper.set( worldRadius-0.3, pathAngleValues[row], -rollingGroundSphere.rotation.x+4 );
 	}else{
-		newTree=newGodzilla();
+		newgodzilla=newGodzilla();
 		var forestAreaAngle=0;//[1.52,1.57,1.62];
 		if(isLeft){
 			forestAreaAngle=1.8;
@@ -340,94 +304,94 @@ function addTree(inPath, row, isLeft){
 		}
 		sphericalHelper.set( worldRadius-0.3, forestAreaAngle, row );
 	}
-	newTree.position.setFromSpherical( sphericalHelper );
+	newgodzilla.position.setFromSpherical( sphericalHelper );
 	var rollingGroundVector=rollingGroundSphere.position.clone().normalize();
-	var treeVector=newTree.position.clone().normalize();
-	newTree.quaternion.setFromUnitVectors(treeVector,rollingGroundVector);
-	newTree.rotation.x+=(Math.random()*(2*Math.PI/10))+-Math.PI/10;
+	var godzillaVector=newgodzilla.position.clone().normalize();
+	newgodzilla.quaternion.setFromUnitVectors(godzillaVector,rollingGroundVector);
+	newgodzilla.rotation.x+=(Math.random()*(2*Math.PI/10))+-Math.PI/10;
 	
-	rollingGroundSphere.add(newTree);
+	rollingGroundSphere.add(newgodzilla);
 }
 function newGodzilla(){
-	var g = SkeletonUtils.clone(godzilla);
-	g.castShadow = true;
-	return g
+	return SkeletonUtils.clone(godzilla);
 }
 
 function update(time,timeAnt){
-	console.log()
-	stats.update();
-    //animate
-	var delta = clock2.getDelta()
-    rollingGroundSphere.rotation.x += rollingSpeed * delta * 100;
-    heroSphere.rotation.x -= heroRollingSpeed * delta * 150;
-    if(heroSphere.position.y<=heroBaseY){
-    	jumping=false;
-    	bounceValue=(Math.random()*0.04)+0.005;
-    }
-    //heroSphere.position.y+=bounceValue;
-    heroSphere.position.x=THREE.Math.lerp(heroSphere.position.x,currentLane, laneChangeSpeed*clock.getDelta());//clock.getElapsedTime());
-    bounceValue-=gravity * delta * 1000;
+	if(!hasCollided){
+		console.log()
+		stats.update();
+		//animate
+		var delta = clock2.getDelta()
+		rollingGroundSphere.rotation.x += rollingSpeed * delta * 100;
+		heroSphere.rotation.x -= heroRollingSpeed * delta * 150;
+		heroSphere.position.x=THREE.Math.lerp(heroSphere.position.x,currentLane, laneChangeSpeed*clock.getDelta());//clock.getElapsedTime());
 
-	if(!hasCollided && enPartida){
-		score+=1000*rollingSpeed*(1/treeReleaseInterval) * delta
-		scoreText.innerHTML="Puntuación: " + Math.round(score).toString();
+		if(!hasCollided && enPartida){
+			score+=1000*rollingSpeed*(1/godzillaReleaseInterval) * delta
+			scoreText.innerHTML="Puntuación: " + Math.round(score).toString();
+		}
+
+		if(clock.getElapsedTime()>godzillaReleaseInterval){ //Se actualiza la puntuación aquí para ser independiente de fps
+			clock.start();
+			addPathgodzilla();
+		}
+		dogodzillaLogic();
+		render();
+		animFrame = requestAnimationFrame(update);
 	}
-
-    if(clock.getElapsedTime()>treeReleaseInterval){ //Se actualiza la puntuación aquí para ser independiente de fps
-    	clock.start();
-    	addPathTree();
-    }
-    doTreeLogic();
-    doExplosionLogic();
-    render();
-	requestAnimationFrame(update);
 }
-function doTreeLogic(){
-	var oneTree;
-	var treePos = new THREE.Vector3();
-	var treesToRemove=[];
-	treesInPath.forEach( function ( element, index ) {
-		oneTree=treesInPath[ index ];
-		treePos.setFromMatrixPosition( oneTree.matrixWorld );
-		if(treePos.z>6 &&oneTree.visible){//gone out of our view zone
-			treesToRemove.push(oneTree);
+function dogodzillaLogic(){
+	var onegodzilla;
+	var godzillaPos = new THREE.Vector3();
+	var godzillasToRemove=[];
+	godzillasInPath.forEach( function ( element, index ) {
+		onegodzilla=godzillasInPath[ index ];
+		godzillaPos.setFromMatrixPosition( onegodzilla.matrixWorld );
+		if(godzillaPos.z>6 &&onegodzilla.visible){//gone out of our view zone
+			godzillasToRemove.push(onegodzilla);
 		}else{//check collision
-			if(treePos.distanceTo(heroSphere.position)<=0.6){
-				console.log("hit");
+			if(godzillaPos.distanceTo(heroSphere.position)<=0.6){
 				hasCollided=true;
+				gameOver();
 			}
 		}
 	});
 	var fromWhere;
-	treesToRemove.forEach( function ( element, index ) {
-		oneTree=treesToRemove[ index ];
-		fromWhere=treesInPath.indexOf(oneTree);
-		treesInPath.splice(fromWhere,1);
-		treesPool.push(oneTree);
-		oneTree.visible=false;
-		console.log("remove tree");
+	godzillasToRemove.forEach( function ( element, index ) {
+		onegodzilla=godzillasToRemove[ index ];
+		fromWhere=godzillasInPath.indexOf(onegodzilla);
+		godzillasInPath.splice(fromWhere,1);
+		godzillasPool.push(onegodzilla);
+		onegodzilla.visible=false;
+		console.log("remove godzilla");
 	});
 }
-function doExplosionLogic(){
-	/*if(!particles.visible)return;
-	for (var i = 0; i < particleCount; i ++ ) {
-		particleGeometry.vertices[i].multiplyScalar(explosionPower);
-	}
-	if(explosionPower>1.005){
-		explosionPower-=0.001;
-	}else{
-		particles.visible=false;
-	}
-	particleGeometry.verticesNeedUpdate = true;*/
-}
+
 function render(){
-    renderer.render(scene, camera);//draw
+    renderer.render(scene, camera);
 }
-function gameOver () {
-  //cancelAnimationFrame( globalRenderID );
-  //window.clearInterval( powerupSpawnIntervalID );
+
+function gameOver () { //Fin de partida
+  var audio = new Audio('../sounds/godScream.ogg');
+  audio.volume = 0.5;
+  audio.play();
+
+  var botonEnd = document.createElement('button');
+  botonEnd.innerHTML = "Volver a intentar";
+  botonEnd.onclick = function(){location.reload()};
+
+  botonEnd.style.position = 'absolute';
+  botonEnd.style.width = "100px";
+  botonEnd.style.height = "50px";
+  botonEnd.style.left = "calc(50% - 50px)";
+  botonEnd.style.top = "calc(40%)";
+  botonEnd.style.border = "thick solid #FFFFFF";
+  botonEnd.style.opacity = "0.7";
+  botonEnd.style.borderRadius = "4px";
+
+  document.body.append(botonEnd);
 }
+
 function updateAspectRatio() { //Se asegura que la cámara no se distorsione al modificar el aspect ratio
 	sceneHeight = window.innerHeight;
 	sceneWidth = window.innerWidth;
