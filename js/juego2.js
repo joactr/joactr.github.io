@@ -11,14 +11,13 @@ var heroRadius=0.2;
 var sphericalHelper;
 var pathAngleValues;
 var heroBaseY=2;
-var gravity=0.005;
 var leftLane=-1;
 var rightLane=1;
 var middleLane=0;
 var currentLane;
 var laneChangeSpeed = 7;
 var clock,clock2;
-var escalaMonstruo = 0.00125;
+var escalaMonstruo = 0.0015;
 var godzillaReleaseInterval=0.35;
 var godzillasInPath;
 var godzillasPool;
@@ -71,6 +70,7 @@ function botonesInicio(){ //Crea los botones de inicio y los estiliza con css
 	botonFacil.style.border = "thick solid #FFFFFF";
 	botonFacil.style.opacity = "0.7";
 	botonFacil.style.borderRadius = "4px";
+	botonFacil.style.zIndex = "5";
 
 	botonNormal.style.position = 'absolute';
 	botonNormal.style.width = "100px";
@@ -80,6 +80,7 @@ function botonesInicio(){ //Crea los botones de inicio y los estiliza con css
 	botonNormal.style.border = "thick solid #FFFFFF";
 	botonNormal.style.opacity = "0.7";
 	botonNormal.style.borderRadius = "4px";
+	botonNormal.style.zIndex = "5";
 
 	botonDificil.style.position = 'absolute';
 	botonDificil.style.width = "100px";
@@ -89,6 +90,7 @@ function botonesInicio(){ //Crea los botones de inicio y los estiliza con css
 	botonDificil.style.border = "thick solid #FFFFFF";
 	botonDificil.style.opacity = "0.7";
 	botonDificil.style.borderRadius = "4px";
+	botonDificil.style.zIndex = "5";
 
 	document.body.appendChild(botonFacil);
 	document.body.appendChild(botonNormal);
@@ -195,16 +197,12 @@ function handleKeyDown(keyEvent){
 			currentLane=leftLane;
 		}else if(currentLane==rightLane){
 			currentLane=middleLane;
-		}else{
-			validMove=false;	
 		}
 	} else if ( keyEvent.keyCode === 39) {//right
 		if(currentLane==middleLane){
 			currentLane=rightLane;
 		}else if(currentLane==leftLane){
 			currentLane=middleLane;
-		}else{
-			validMove=false;	
 		}
 	}
 	//heroSphere.position.x=currentLane;
@@ -249,8 +247,8 @@ function addLight(){
 	//Set up shadow properties for the luzSol light
 	luzSol.shadow.mapSize.width = 256;
 	luzSol.shadow.mapSize.height = 256;
-	luzSol.shadow.camera.near = 0.5;
-	luzSol.shadow.camera.far = 50 ;
+	luzSol.shadow.camera.near = 0.01;
+	luzSol.shadow.camera.far = 20 ;
 
     var focal = new THREE.SpotLight('white', 0.05);
     focal.position.set(0, 40, 10);
@@ -258,11 +256,11 @@ function addLight(){
     focal.angle = Math.PI / 7;
     focal.penumbra = 0.2;
 
-    focal.shadow.camera.near = 20;
-    focal.shadow.camera.far = 1500;
-    focal.shadow.camera.fov = 4000;
-    focal.shadow.mapSize.width = 10000;
-    focal.shadow.mapSize.height = 10000;
+    focal.shadow.camera.near = 0.011;
+    focal.shadow.camera.far = 20;
+    focal.shadow.camera.fov = 180;
+    focal.shadow.mapSize.width = 256;
+    focal.shadow.mapSize.height = 256;
 
     scene.add(focal.target);
     focal.castShadow = true;
@@ -388,6 +386,10 @@ function gameOver () { //Fin de partida
   botonEnd.style.border = "thick solid #FFFFFF";
   botonEnd.style.opacity = "0.7";
   botonEnd.style.borderRadius = "4px";
+
+  scoreText.style.fontSize = "60px";
+  scoreText.style.left = "40%";
+  scoreText.style.top = "10%";
 
   document.body.append(botonEnd);
 }
