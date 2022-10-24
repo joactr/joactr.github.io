@@ -211,7 +211,7 @@ function agregarBola(){
 }
 
 function addWorld(){
-	new THREE.TextureLoader().load('../images/space.jpeg' , function(texture)
+	new THREE.TextureLoader().load('../images/space.jpg' , function(texture)
 	{
 	 scene.background = texture;  
 	});
