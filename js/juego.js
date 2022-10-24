@@ -2,15 +2,13 @@ import {GLTFLoader} from '../lib/GLTFLoader.module.js'
 import * as SkeletonUtils from '../lib/SkeletonUtils.js'
 window.addEventListener('load', init, false);
 
-var sceneWidth,sceneHeight,camera,scene,renderer,luzSol,img;
-var tierraBola,bolaProta;
-var velRuede=0.004;
-var velocidadRuedeBola;
-var sphericalHelper,caminoAngleValues;
+var camera,scene,renderer,luzSol,img,tierraBola,bolaProta;
+var velRuede=0.004,velocidadRuedeBola;
+var sphericalHelper;
 var caminoIzq=-1,caminoDer=1,caminoMid=0,currentLane,velCambioCamino = 7;
 var reloj,reloj2; //Relojes para animación y control de tiempo
-var escalaMonstruo = 0.0015;
-var godzillaReleaseInterval=0.35;
+var escalaMonstruo = 0.0015; //El modelo es muy grande y hay que escalarlo
+var intervaloCreacionGodzillas=0.35;
 var godzillasCamino,godzillasPool;
 var stats,scoreText,score,botonFacil,botonNormal,botonDificil, godzilla;
 var haChocado, enPartida = false;
@@ -18,13 +16,13 @@ var haChocado, enPartida = false;
 function menu(dificultad){ //Se ha apretado un botón de inicio, empezamos
 	if(dificultad === "facil"){
 		velRuede = 0.003;
-		godzillaReleaseInterval=0.5;
+		intervaloCreacionGodzillas=0.5;
 	}else if(dificultad === "facil"){
 		velRuede = 0.004;
-		godzillaReleaseInterval=0.35;
+		intervaloCreacionGodzillas=0.35;
 	}else{
 		velRuede = 0.006;
-		godzillaReleaseInterval=0.28;
+		intervaloCreacionGodzillas=0.28;
 	}
 	reloj2.start();
 	newGodzillasPool();
@@ -37,7 +35,6 @@ function menu(dificultad){ //Se ha apretado un botón de inicio, empezamos
 	img.style.left = "auto";
 	img.style.right = "1px";
 	img.style.top = "2px";
-
 }
 
 function botonesInicio(){ //Crea los botones de inicio y los estiliza con css
@@ -104,25 +101,18 @@ function init(time) {
 	score=0;
 	godzillasCamino=[];
 	godzillasPool=[];
-	reloj=new THREE.Clock();
+	reloj=new THREE.Clock(),reloj2=new THREE.Clock();
 	reloj.start();
-	reloj2=new THREE.Clock();
-	velocidadRuedeBola=(velRuede*26/0.2)/5;
-	sphericalHelper = new THREE.Spherical();
-	caminoAngleValues=[1.52,1.57,1.62];
-    sceneWidth=window.innerWidth;
-    sceneHeight=window.innerHeight;
-    scene = new THREE.Scene();//the 3d scene
-    scene.fog = new THREE.FogExp2( 0xf0fff0, 0.04 );
-    camera = new THREE.PerspectiveCamera( 60, sceneWidth / sceneHeight, 0.1, 1000 );//perspective camera
-    renderer = new THREE.WebGLRenderer({alpha:true});//renderer with transparent backdrop
+	velocidadRuedeBola=velRuede*26;
+	sphericalHelper = new THREE.Spherical(); //Ayuda a plantear las coordenadas esféricas de un objeto con respecto a la tierra
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.01, 100 );
+    renderer = new THREE.WebGLRenderer();
     renderer.setClearColor(0xfffafa, 1); 
     renderer.shadowMap.enabled = true;//enable shadow
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.setSize( sceneWidth, sceneHeight );
+    renderer.setSize( window.innerWidth, window.innerHeight );
 	document.body.appendChild(renderer.domElement);
-	stats = new Stats();
-	document.body.appendChild(stats.dom);
 	new GLTFLoader().load('../models/godzilla.glb',
 		function ( gltf ) {
 			gltf.scene.scale.set(escalaMonstruo,escalaMonstruo,escalaMonstruo)
@@ -133,9 +123,8 @@ function init(time) {
 			} );
 			addWorld();
 			agregarBola();
-			addLight();
+			agregarLuces();
 			botonesInicio(); //Crea los botones de selección de dificultad
-
 			update();
 		},
 		function ( xhr ) {
@@ -149,9 +138,7 @@ function init(time) {
 	camera.position.set(0,3.5,6.5);
 	camera.rotation.x = -0.5
 
-	
 	window.addEventListener('resize', updateAspectRatio, false);// Función de re-escalado
-
 	document.onkeydown = handleKeyDown;
 	
 	scoreText = document.createElement('div');
@@ -172,33 +159,19 @@ function init(time) {
 		   }, { once: true })
 		})
 	 });
+	stats = new Stats();
+	document.body.appendChild(stats.dom);
 }
 
 function newGodzillasPool(){
-	var maxgodzillasInPool=10;
-	var newgodzilla;
-	for(var i=0; i<maxgodzillasInPool;i++){
-		newgodzilla=newGodzilla();
-		godzillasPool.push(newgodzilla);
-	}
-}
-function handleKeyDown(keyEvent){ //Atención a eventos de teclado
-	if ( keyEvent.keyCode === 37) {//izquierda
-		if(currentLane==caminoMid){
-			currentLane=caminoIzq;
-		}else if(currentLane==caminoDer){
-			currentLane=caminoMid;
-		}
-	} else if ( keyEvent.keyCode === 39) {//derecha
-		if(currentLane==caminoMid){
-			currentLane=caminoDer;
-		}else if(currentLane==caminoIzq){
-			currentLane=caminoMid;
-		}
+	var newGodzilla;
+	for(var i=0; i<10;i++){ //10 es numero maximo de godzillas
+		newGodzilla=crearGodzilla();
+		godzillasPool.push(newGodzilla);
 	}
 }
 
-function agregarBola(){
+function agregarBola(){ //Agregamos al protagonista a la escena
 	var sphereGeometry = new THREE.SphereGeometry( 0.2, 80);
 	var sphereMaterial = new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load(
         '../textures/luna.jpg'
@@ -207,8 +180,8 @@ function agregarBola(){
 	bolaProta.receiveShadow = true;
 	bolaProta.castShadow=true;
 	scene.add( bolaProta );
-	currentLane=caminoMid;
-	bolaProta.position.set(currentLane,2,4.8)
+	currentLane=caminoMid; 
+	bolaProta.position.set(currentLane,2,4.8) //Inicializamos su posición
 }
 
 function addWorld(){
@@ -227,17 +200,8 @@ function addWorld(){
 	tierraBola.position.set(tierraBola.position.x,-24,2) //Situamos la tierra
 	addWorldgodzillas();
 }
-function addLight(){
-
-	luzSol = new THREE.DirectionalLight( 0xC8C9AB, 0.9);
-	luzSol.position.set( 12,6,-7 );
-	luzSol.castShadow = true;
-	scene.add(luzSol);
-	//Propiedades de las sombras del sol
-	luzSol.shadow.mapSize.width = 256;
-	luzSol.shadow.mapSize.height = 256;
-	luzSol.shadow.camera.near = 0.01;
-	luzSol.shadow.camera.far = 20 ;
+function agregarLuces(){
+	scene.fog = new THREE.FogExp2( 0xf0fff0, 0.04 ); //No es una luz, pero es un efecto
 
     var focal = new THREE.SpotLight('white', 0.05);
 	//Propiedades sombras focal
@@ -259,57 +223,70 @@ function addLight(){
 	//No puede crear sombras, pero es realista para planetas
 	var hemisphereLight = new THREE.HemisphereLight(0xfffafa,0x000000, 0.7) 
 	scene.add(hemisphereLight);
+
+	luzSol = new THREE.DirectionalLight( 0xc3c49f, 0.9);
+	//Propiedades de las sombras del sol
+	luzSol.shadow.mapSize.width = 256;
+	luzSol.shadow.mapSize.height = 256;
+	luzSol.shadow.camera.near = 0.01;
+	luzSol.shadow.camera.far = 20 ;
+	luzSol.position.set( 12,6,-7 );
+	luzSol.castShadow = true;
+	scene.add(luzSol);
 }
 function agregarGodzillaCamino(){
-	var options=[0,1,2];
-	var lane= Math.floor(Math.random()*3);
-	addgodzilla(true,lane);
-	options.splice(lane,1);
-	if(Math.random()>0.5){
+	var lineas=[0,1,2];
+	var lane= Math.floor(Math.random()*3); //Elegimos entre una de las tres aleatoriamente
+	addGodzilla(true,lane);
+	lineas.splice(lane,1); //Nos aseguramos que no se puede volver a poner otro en ese camino
+	if(Math.random()>0.5){ //Probabilidad de añadir un segundo monstruo al lado
 		lane= Math.floor(Math.random()*2);
-		addgodzilla(true,options[lane]);
+		addGodzilla(true,lineas[lane]);
 	}
 }
 function addWorldgodzillas(){
-	var numgodzillas=36;
-	var gap=6.28/36;
-	for(var i=0;i<numgodzillas;i++){
-		addgodzilla(false,i*gap, true);
-		addgodzilla(false,i*gap, false);
+	var numGodzillas=36;
+	var gap=0.1744; //Distancias entre ellos
+	for(var i=0;i<numGodzillas;i++){
+		addGodzilla(false,i*gap, true);
+		addGodzilla(false,i*gap, false);
 	}
 }
-function addgodzilla(enCamino, row, isLeft){
-	var newgodzilla;
+function addGodzilla(enCamino, fila, esIzq){
+	var newGodzilla;
 	if(enCamino){
 		if(godzillasPool.length==0)return;
-		newgodzilla=godzillasPool.pop();
-		newgodzilla.visible=true;
-		godzillasCamino.push(newgodzilla);
-		sphericalHelper.set( 25.7, caminoAngleValues[row], -tierraBola.rotation.x+4 );
-	}else{
-		newgodzilla=newGodzilla();
-		var forestAreaAngle=0;//[1.52,1.57,1.62];
-		if(isLeft){
-			forestAreaAngle=1.8;
+		newGodzilla=godzillasPool.pop();
+		newGodzilla.visible=true;
+		godzillasCamino.push(newGodzilla);
+		var angulosModelos=[1.53,1.57,1.61]; //Ajusta la posición de spawn de los godzillas (der, mid, izq)
+		//Se usa 25.7 de radio para que estén ligeramente enterrados y no tapen la vista
+		sphericalHelper.set( 25.7, angulosModelos[fila], -tierraBola.rotation.x+4 ); //Radio, phi, theta
+	}else{ //Es uno de los que está en los laterales
+		newGodzilla=crearGodzilla();
+		var anguloLateral=0; //Su ángulo va a depender de si está a la izquierda o derecha del protagonista
+		if(esIzq){
+			anguloLateral=1.75;
 		}else{
-			forestAreaAngle=1.4;
+			anguloLateral=1.4;
 		}
-		sphericalHelper.set( 25.7, forestAreaAngle, row );
+		sphericalHelper.set( 25.7, anguloLateral, fila );
 	}
-	newgodzilla.position.setFromSpherical( sphericalHelper );
-	var rollingGroundVector=tierraBola.position.clone().normalize();
-	var godzillaVector=newgodzilla.position.clone().normalize();
-	newgodzilla.quaternion.setFromUnitVectors(godzillaVector,rollingGroundVector);
-	newgodzilla.rotation.x+=(Math.random()*(2*Math.PI/10))+-Math.PI/10;
+	newGodzilla.position.setFromSpherical( sphericalHelper );
+	var vecGiro=tierraBola.position.clone().normalize();
+	var vecGodzilla=newGodzilla.position.clone().normalize();
+
+	newGodzilla.quaternion.setFromUnitVectors(vecGodzilla,vecGiro);
+	newGodzilla.rotation.x+=(Math.random()*(2*Math.PI/10))+-Math.PI/10;
 	
-	tierraBola.add(newgodzilla);
+	tierraBola.add(newGodzilla); //Agregamos el modelo al mapa
 }
-function newGodzilla(){
+function crearGodzilla(){ //Devuelve un modelo clonado para meter en el mapa
 	return SkeletonUtils.clone(godzilla);
 }
 
 function update(time,timeAnt){
-	if(!haChocado){
+	if(!haChocado){ //Solo actualizamos si seguimos jugando
 		stats.update();
 		var delta = reloj2.getDelta()
 		tierraBola.rotation.x += velRuede * delta * 100;
@@ -318,15 +295,15 @@ function update(time,timeAnt){
 		bolaProta.position.x=THREE.Math.lerp(bolaProta.position.x,currentLane, velCambioCamino*reloj.getDelta());
 
 		if(!haChocado && enPartida){ //Se suma la puntuación
-			score+=1000*velRuede*(1/godzillaReleaseInterval) * delta
+			score+=1000*velRuede*(1/intervaloCreacionGodzillas) * delta;
 			scoreText.innerHTML="Puntuación: " + Math.round(score).toString();
 		}
-
-		if(reloj.getElapsedTime()>godzillaReleaseInterval){ //Se actualiza la puntuación aquí para ser independiente de fps
+		//Agregamos nuevos enemigos si ha transcurrido el tiempo
+		if(reloj.getElapsedTime()>intervaloCreacionGodzillas){ 
 			reloj.start();
 			agregarGodzillaCamino();
 		}
-		calcularChoque();
+		calcularChoque(); //Se encarga de calcular choques y visibilidad
 		render();
 		requestAnimationFrame(update);
 	}
@@ -387,9 +364,25 @@ function gameOver () { //Fin de partida
 }
 
 function updateAspectRatio() { //Se asegura que la cámara no se distorsione al modificar el aspect ratio
-	sceneHeight = window.innerHeight;
-	sceneWidth = window.innerWidth;
-	renderer.setSize(sceneWidth, sceneHeight);
-	camera.aspect = sceneWidth/sceneHeight;
+	window.innerHeight = window.innerHeight;
+	window.innerWidth = window.innerWidth;
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	camera.aspect = window.innerWidth/window.innerHeight;
 	camera.updateProjectionMatrix();
+}
+
+function handleKeyDown(keyEvent){ //Atención a eventos de teclado
+	if ( keyEvent.keyCode === 37) {//Flecha izquierda
+		if(currentLane==caminoMid){
+			currentLane=caminoIzq;
+		}else if(currentLane==caminoDer){
+			currentLane=caminoMid;
+		}
+	} else if ( keyEvent.keyCode === 39) {//Flecha derecha
+		if(currentLane==caminoMid){
+			currentLane=caminoDer;
+		}else if(currentLane==caminoIzq){
+			currentLane=caminoMid;
+		}
+	}
 }
