@@ -99,6 +99,7 @@ function botonesInicio(){ //Crea los botones de inicio y los estiliza con css
 
 function init(time) {
 	var audio = new Audio('../sounds/ost.mp3');
+	audio.loop = true;
 	haChocado=false;
 	score=0;
 	godzillasCamino=[];
@@ -363,7 +364,6 @@ function render(){
 function gameOver () { //Fin de partida
 	var audio = new Audio('../sounds/godScream.ogg');
 	audio.volume = 0.5;
-	audio.loop = true;
 	audio.play();
 
 	var botonEnd = document.createElement('button');
