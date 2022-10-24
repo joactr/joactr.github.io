@@ -3,6 +3,7 @@ import {TWEEN} from '../lib/tween.module.min.js';
 
 let renderer, scene, camera, cameraPlanta,matEsfera;
 let controls,gui;
+var materialPlateadoLambert,materialPlateadoPhong,materialDorado,materialPinza;
 var material_robot,robot,suelo,base,esparrago,rotula,eje,mano,basePinzaDe,basePinzaIz,pinzaDe,pinzaIz,brazo,antebrazo;
 var disco,nervio1,nervio2,nervio3,nervio4;
 let L = 90;
@@ -34,31 +35,35 @@ function init(){
     cameraTop.lookAt(new THREE.Vector3(0, 0, 0)); //Hace que la cámara mire al origen de coordenadas
 
 
-    //Iluminación
-    var ambiental = new THREE.AmbientLight(0x878787);
+    //Iluminación-------------
+    var ambiental = new THREE.AmbientLight(0x878787); //Grisáceo
     scene.add(ambiental);
 
-    var directional = new THREE.DirectionalLight('white', 0.3);
-    directional.position.set(0,1,1)
-    directional.castShadow = true;
-    scene.add(directional);
-    directional.shadow.mapSize.width = 1000; // default
-    directional.shadow.mapSize.height = 1000; // default
-    directional.shadow.camera.near = 20; // default
-    directional.shadow.camera.far = 1000; // default
+    var direccional = new THREE.DirectionalLight('white',1);
+    direccional.position.set(0,100,-100);
+    direccional.castShadow = true;
+    direccional.shadow.camera.near = 0.5;
+    direccional.shadow.camera.far = 2000;
+    direccional.shadow.camera.left = - 2000;
+    direccional.shadow.camera.right = 2000;
+    direccional.shadow.camera.top = 2000;
+    direccional.shadow.camera.bottom = - 2000;
+    direccional.shadow.mapSize.width = 10000; // default
+    direccional.shadow.mapSize.height = 10000; // default
+    scene.add(direccional);
 
     var puntual = new THREE.PointLight('white', 0.3);
     puntual.position.set(50,200,50)
     scene.add(puntual);
     puntual.castShadow = true
 
-    var focal = new THREE.SpotLight('orange', 0.5);
+    /*var focal = new THREE.SpotLight('orange', 0.5);
     focal.position.set(300, 600, -800);
     focal.target.position.set(0, 0, 0);
     focal.angle = Math.PI / 7;
     focal.penumbra = 0.2;
 
-    focal.shadow.camera.near = 20;
+    focal.shadow.camera.near = 10;
     focal.shadow.camera.far = 1500;
     focal.shadow.camera.fov = 4000;
     focal.shadow.mapSize.width = 10000;
@@ -66,7 +71,7 @@ function init(){
 
     scene.add(focal.target);
     focal.castShadow = true;
-    scene.add(focal);
+    scene.add(focal);*/
 }
 
 function updateAspectRatio() { //Por si cambia el tamaño de la ventana
@@ -109,7 +114,7 @@ function setCameras(ar){ //Inicializa la cámara ortográfica de planta
 function loadScene(){
     material_robot = new THREE.MeshLambertMaterial({ wireframe: false }); //Creamos el material
     robot = new THREE.Object3D(); //Creamos el robot
-    var baseG = new THREE.CylinderGeometry(50, 50, 15, 25); //RadioTop,RadioBot,altura,segmentosRad
+    var baseG = new THREE.CylinderGeometry(50, 50, 15, 50); //RadioTop,RadioBot,altura,segmentosRad
     brazo = new THREE.Object3D();
     var ejeG = new THREE.CylinderGeometry(25, 25, 15, 20);
     var esparragoG = new THREE.BoxGeometry(18, 120, 12);
@@ -117,7 +122,7 @@ function loadScene(){
     antebrazo = new THREE.Object3D();
     var discoG = new THREE.CylinderGeometry(22, 22, 6, 20);
     var nervioG = new THREE.BoxGeometry(4, 80, 4);
-    var manoG = new THREE.CylinderGeometry(15, 15, 40, 20);
+    var manoG = new THREE.CylinderGeometry(15, 15, 40, 80);
     var pinzasG = new THREE.BufferGeometry();
     var basePinzaG = new THREE.BoxGeometry(19.9, 20, 4);
 
@@ -171,27 +176,30 @@ function loadScene(){
     pinzasG.setFromPoints(puntosPinza)
     pinzasG.setAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) );
     pinzasG.computeVertexNormals();
-    
+    materialPlateadoLambert = new THREE.MeshLambertMaterial({ color: 'silver', shading: THREE.SmoothShading, map: new THREE.TextureLoader().load(
+        "../textures/metal.jpg") });
     //Las posiciones y rotaciones de las pinzas son distintas para que la parte externa de la pinza quede similar
-    pinzaIz = new THREE.Mesh(pinzasG, material_robot);
+    materialPinza = new THREE.MeshLambertMaterial({ color: 'silver', });
+    pinzaIz = new THREE.Mesh(pinzasG, materialPinza);
     pinzaIz.position.set(0, 10, 8);
     pinzaIz.rotateY(-Math.PI / 2).rotateX(Math.PI).rotateZ(-Math.PI/2);
     pinzaIz.receiveShadow = true;
     pinzaIz.castShadow = true;
 
-    pinzaDe = new THREE.Mesh(pinzasG, material_robot);
+    pinzaDe = new THREE.Mesh(pinzasG, materialPinza);
     pinzaDe.position.set(0, 10, -8);
     pinzaDe.rotateX(Math.PI / 2).rotateY(-Math.PI/2).rotateZ(-Math.PI);
     pinzaDe.receiveShadow = true;
     pinzaDe.castShadow = true;
 
-    basePinzaIz = new THREE.Mesh(basePinzaG, material_robot);
+
+    basePinzaIz = new THREE.Mesh(basePinzaG, materialPinza);
     basePinzaIz.rotateX(Math.PI / 2);
     basePinzaIz.position.set(0,-8,10);
     basePinzaIz.receiveShadow = true;
     basePinzaIz.castShadow = true;
 
-    basePinzaDe = new THREE.Mesh(basePinzaG, material_robot);
+    basePinzaDe = new THREE.Mesh(basePinzaG, materialPinza);
     basePinzaDe.rotateX(Math.PI / 2);
     basePinzaDe.position.set(0,8,10);
     basePinzaDe.receiveShadow = true;
@@ -199,17 +207,18 @@ function loadScene(){
 
     suelo = new THREE.PlaneGeometry(1000, 1000, 50, 50); //Ancho, alto, cantidad de segmentos ancho/alto
 
-    base = new THREE.Mesh(baseG, material_robot);
+
+    base = new THREE.Mesh(baseG, materialPlateadoLambert);
     base.position.set(0, 0, 0);
     base.receiveShadow = true;
     base.castShadow = true;
 
-    eje = new THREE.Mesh(ejeG, material_robot);
+    eje = new THREE.Mesh(ejeG, materialPlateadoLambert);
     eje.rotateZ(Math.PI/2);
     eje.receiveShadow = true;
     eje.castShadow = true;
 
-    esparrago = new THREE.Mesh(esparragoG, material_robot);
+    esparrago = new THREE.Mesh(esparragoG, materialPlateadoLambert);
     esparrago.position.set(0,50,0);
     esparrago.rotateY(Math.PI / 2);
     esparrago.receiveShadow = true;
@@ -224,30 +233,35 @@ function loadScene(){
     rotula.receiveShadow = true;
     rotula.castShadow = true;
 
-    disco = new THREE.Mesh(discoG, material_robot);
+    materialDorado = new THREE.MeshPhongMaterial({ color: 'gold',specular: 'gold',shinies:60, map: new THREE.TextureLoader().load(
+        "../textures/gold.jpg") });
+    disco = new THREE.Mesh(discoG, materialDorado);
     disco.position.set(0, 0, 0);
     disco.receiveShadow = true;
     disco.castShadow = true;
 
-    nervio1 = new THREE.Mesh(nervioG, material_robot);
+    nervio1 = new THREE.Mesh(nervioG, materialDorado);
     nervio1.position.set(-8, 46, 8);
     nervio1.receiveShadow = true;
     nervio1.castShadow = true;
-    nervio2 = new THREE.Mesh(nervioG, material_robot);
+    nervio2 = new THREE.Mesh(nervioG, materialDorado);
     nervio2.position.set(8, 46, 8);
     nervio2.receiveShadow = true;
     nervio2.castShadow = true;
-    nervio3 = new THREE.Mesh(nervioG, material_robot);
+    nervio3 = new THREE.Mesh(nervioG, materialDorado);
     nervio3.position.set(-8, 46, -8);
     nervio3.receiveShadow = true;
     nervio3.castShadow = true;
-    nervio4 = new THREE.Mesh(nervioG, material_robot);
+    nervio4 = new THREE.Mesh(nervioG, materialDorado);
     nervio4.position.set(8, 46, -8);
     nervio4.receiveShadow = true;
     nervio4.castShadow = true;
 
     antebrazo.position.set(0, 120, 0)
-    mano = new THREE.Mesh(manoG, material_robot);
+
+    materialPlateadoPhong = new THREE.MeshPhongMaterial({ color: 'white', map: new THREE.TextureLoader().load(
+        "../textures/metal.jpg") });
+    mano = new THREE.Mesh(manoG, materialPlateadoPhong);
     mano.position.set(0, 80, 0);
     mano.rotateZ(Math.PI/2);
     mano.receiveShadow = true;
@@ -417,8 +431,11 @@ function crearInterfaz() {
     }).listen();
 
     gui.add(effectControl, "alambres").name("Alambres").onChange((value)=>{
-        material_robot.wireframe = value;
+        materialPinza.wireframe = value;
         matEsfera.wireframe = value;
+        materialPlateadoLambert.wireframe = value;
+        materialPlateadoPhong.wireframe = value;
+        materialDorado.wireframe = value;
     }).listen();
 
     gui.add(effectControl, "animar").name("Animar").onChange((value)=>{

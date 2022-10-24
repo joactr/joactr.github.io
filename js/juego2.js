@@ -3,39 +3,30 @@ import * as SkeletonUtils from '../lib/SkeletonUtils.js'
 window.addEventListener('load', init, false);
 
 var sceneWidth,sceneHeight,camera,scene,renderer,luzSol,img;
-var rollingGroundSphere,heroSphere, animFrame;
-var rollingSpeed=0.004;
-var heroRollingSpeed;
-var worldRadius=26;
-var heroRadius=0.2;
-var sphericalHelper;
-var pathAngleValues;
-var heroBaseY=2;
-var leftLane=-1;
-var rightLane=1;
-var middleLane=0;
-var currentLane;
-var laneChangeSpeed = 7;
-var clock,clock2;
+var tierraBola,bolaProta;
+var velRuede=0.004;
+var velocidadRuedeBola;
+var sphericalHelper,caminoAngleValues;
+var caminoIzq=-1,caminoDer=1,caminoMid=0,currentLane,velCambioCamino = 7;
+var reloj,reloj2; //Relojes para animación y control de tiempo
 var escalaMonstruo = 0.0015;
 var godzillaReleaseInterval=0.35;
-var godzillasInPath;
-var godzillasPool;
+var godzillasCamino,godzillasPool;
 var stats,scoreText,score,botonFacil,botonNormal,botonDificil, godzilla;
-var hasCollided, enPartida = false;
+var haChocado, enPartida = false;
 
-function menu(dificultad){
+function menu(dificultad){ //Se ha apretado un botón de inicio, empezamos
 	if(dificultad === "facil"){
-		rollingSpeed = 0.003;
+		velRuede = 0.003;
 		godzillaReleaseInterval=0.5;
 	}else if(dificultad === "facil"){
-		rollingSpeed = 0.004;
+		velRuede = 0.004;
 		godzillaReleaseInterval=0.35;
 	}else{
-		rollingSpeed = 0.005;
+		velRuede = 0.006;
 		godzillaReleaseInterval=0.28;
 	}
-	clock2.start();
+	reloj2.start();
 	newGodzillasPool();
 	enPartida = true;
 	botonFacil.remove();
@@ -108,16 +99,16 @@ function botonesInicio(){ //Crea los botones de inicio y los estiliza con css
 
 function init(time) {
 	var audio = new Audio('../sounds/ost.mp3');
-	hasCollided=false;
+	haChocado=false;
 	score=0;
-	godzillasInPath=[];
+	godzillasCamino=[];
 	godzillasPool=[];
-	clock=new THREE.Clock();
-	clock.start();
-	clock2=new THREE.Clock();
-	heroRollingSpeed=(rollingSpeed*worldRadius/heroRadius)/5;
+	reloj=new THREE.Clock();
+	reloj.start();
+	reloj2=new THREE.Clock();
+	velocidadRuedeBola=(velRuede*26/0.2)/5;
 	sphericalHelper = new THREE.Spherical();
-	pathAngleValues=[1.52,1.57,1.62];
+	caminoAngleValues=[1.52,1.57,1.62];
     sceneWidth=window.innerWidth;
     sceneHeight=window.innerHeight;
     scene = new THREE.Scene();//the 3d scene
@@ -140,23 +131,22 @@ function init(time) {
 				if ( node.isMesh ) { node.castShadow = true; }
 			} );
 			addWorld();
-			addHero();
+			agregarBola();
 			addLight();
 			botonesInicio(); //Crea los botones de selección de dificultad
 
 			update();
 		},
 		function ( xhr ) {
-			console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+			console.log( ( xhr.loaded / xhr.total * 100 ) + '% cargado' );
 		},
 		function ( error ) {
-			console.log( 'An error happened' );
+			console.log( 'Error al cargar godzilla inicialmente' );
 		}
 	);
 
 	camera.position.set(0,3.5,6.5);
 	camera.rotation.x = -0.5
-	console.log(camera)
 
 	
 	window.addEventListener('resize', updateAspectRatio, false);// Función de re-escalado
@@ -191,34 +181,33 @@ function newGodzillasPool(){
 		godzillasPool.push(newgodzilla);
 	}
 }
-function handleKeyDown(keyEvent){
-	if ( keyEvent.keyCode === 37) {//left
-		if(currentLane==middleLane){
-			currentLane=leftLane;
-		}else if(currentLane==rightLane){
-			currentLane=middleLane;
+function handleKeyDown(keyEvent){ //Atención a eventos de teclado
+	if ( keyEvent.keyCode === 37) {//izquierda
+		if(currentLane==caminoMid){
+			currentLane=caminoIzq;
+		}else if(currentLane==caminoDer){
+			currentLane=caminoMid;
 		}
-	} else if ( keyEvent.keyCode === 39) {//right
-		if(currentLane==middleLane){
-			currentLane=rightLane;
-		}else if(currentLane==leftLane){
-			currentLane=middleLane;
+	} else if ( keyEvent.keyCode === 39) {//derecha
+		if(currentLane==caminoMid){
+			currentLane=caminoDer;
+		}else if(currentLane==caminoIzq){
+			currentLane=caminoMid;
 		}
 	}
-	//heroSphere.position.x=currentLane;
 }
 
-function addHero(){
-	var sphereGeometry = new THREE.SphereGeometry( heroRadius, 80);
+function agregarBola(){
+	var sphereGeometry = new THREE.SphereGeometry( 0.2, 80);
 	var sphereMaterial = new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load(
         '../textures/luna.jpg'
     )})
-	heroSphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
-	heroSphere.receiveShadow = true;
-	heroSphere.castShadow=true;
-	scene.add( heroSphere );
-	currentLane=middleLane;
-	heroSphere.position.set(currentLane,heroBaseY,4.8)
+	bolaProta = new THREE.Mesh( sphereGeometry, sphereMaterial );
+	bolaProta.receiveShadow = true;
+	bolaProta.castShadow=true;
+	scene.add( bolaProta );
+	currentLane=caminoMid;
+	bolaProta.position.set(currentLane,2,4.8)
 }
 
 function addWorld(){
@@ -226,31 +215,31 @@ function addWorld(){
 	{
 	 scene.background = texture;  
 	});
-	var sphereGeometry = new THREE.SphereGeometry( worldRadius, 100,100);
+	var sphereGeometry = new THREE.SphereGeometry( 26, 100,100);
 	var sphereMaterial = new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load(
         '../textures/tierra_8k.jpg'
     )})
-	rollingGroundSphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
-	rollingGroundSphere.receiveShadow = true;
-	rollingGroundSphere.rotation.z=-Math.PI/2;
-	scene.add( rollingGroundSphere ); //Agregamos la tierra a la escena
-	rollingGroundSphere.position.set(rollingGroundSphere.position.x,-24,2) //Situamos la tierra
+	tierraBola = new THREE.Mesh( sphereGeometry, sphereMaterial );
+	tierraBola.receiveShadow = true;
+	tierraBola.rotation.z=-Math.PI/2;
+	scene.add( tierraBola ); //Agregamos la tierra a la escena
+	tierraBola.position.set(tierraBola.position.x,-24,2) //Situamos la tierra
 	addWorldgodzillas();
 }
 function addLight(){
-	var hemisphereLight = new THREE.HemisphereLight(0xfffafa,0x000000, 0.7)
-	scene.add(hemisphereLight);
+
 	luzSol = new THREE.DirectionalLight( 0xC8C9AB, 0.9);
 	luzSol.position.set( 12,6,-7 );
 	luzSol.castShadow = true;
 	scene.add(luzSol);
-	//Set up shadow properties for the luzSol light
+	//Propiedades de las sombras del sol
 	luzSol.shadow.mapSize.width = 256;
 	luzSol.shadow.mapSize.height = 256;
 	luzSol.shadow.camera.near = 0.01;
 	luzSol.shadow.camera.far = 20 ;
 
     var focal = new THREE.SpotLight('white', 0.05);
+	//Propiedades sombras focal
     focal.position.set(0, 40, 10);
     focal.target.position.set(0, 0, 0);
     focal.angle = Math.PI / 7;
@@ -265,8 +254,12 @@ function addLight(){
     scene.add(focal.target);
     focal.castShadow = true;
     scene.add(focal);
+
+	//No puede crear sombras, pero es realista para planetas
+	var hemisphereLight = new THREE.HemisphereLight(0xfffafa,0x000000, 0.7) 
+	scene.add(hemisphereLight);
 }
-function addPathgodzilla(){
+function agregarGodzillaCamino(){
 	var options=[0,1,2];
 	var lane= Math.floor(Math.random()*3);
 	addgodzilla(true,lane);
@@ -284,14 +277,14 @@ function addWorldgodzillas(){
 		addgodzilla(false,i*gap, false);
 	}
 }
-function addgodzilla(inPath, row, isLeft){
+function addgodzilla(enCamino, row, isLeft){
 	var newgodzilla;
-	if(inPath){
+	if(enCamino){
 		if(godzillasPool.length==0)return;
 		newgodzilla=godzillasPool.pop();
 		newgodzilla.visible=true;
-		godzillasInPath.push(newgodzilla);
-		sphericalHelper.set( worldRadius-0.3, pathAngleValues[row], -rollingGroundSphere.rotation.x+4 );
+		godzillasCamino.push(newgodzilla);
+		sphericalHelper.set( 25.7, caminoAngleValues[row], -tierraBola.rotation.x+4 );
 	}else{
 		newgodzilla=newGodzilla();
 		var forestAreaAngle=0;//[1.52,1.57,1.62];
@@ -300,56 +293,55 @@ function addgodzilla(inPath, row, isLeft){
 		}else{
 			forestAreaAngle=1.4;
 		}
-		sphericalHelper.set( worldRadius-0.3, forestAreaAngle, row );
+		sphericalHelper.set( 25.7, forestAreaAngle, row );
 	}
 	newgodzilla.position.setFromSpherical( sphericalHelper );
-	var rollingGroundVector=rollingGroundSphere.position.clone().normalize();
+	var rollingGroundVector=tierraBola.position.clone().normalize();
 	var godzillaVector=newgodzilla.position.clone().normalize();
 	newgodzilla.quaternion.setFromUnitVectors(godzillaVector,rollingGroundVector);
 	newgodzilla.rotation.x+=(Math.random()*(2*Math.PI/10))+-Math.PI/10;
 	
-	rollingGroundSphere.add(newgodzilla);
+	tierraBola.add(newgodzilla);
 }
 function newGodzilla(){
 	return SkeletonUtils.clone(godzilla);
 }
 
 function update(time,timeAnt){
-	if(!hasCollided){
-		console.log()
+	if(!haChocado){
 		stats.update();
-		//animate
-		var delta = clock2.getDelta()
-		rollingGroundSphere.rotation.x += rollingSpeed * delta * 100;
-		heroSphere.rotation.x -= heroRollingSpeed * delta * 150;
-		heroSphere.position.x=THREE.Math.lerp(heroSphere.position.x,currentLane, laneChangeSpeed*clock.getDelta());//clock.getElapsedTime());
+		var delta = reloj2.getDelta()
+		tierraBola.rotation.x += velRuede * delta * 100;
+		bolaProta.rotation.x -= velocidadRuedeBola * delta * 150;
+		//El math.lerp interpola linealmente los valores según el valor de interpolación (tercer argumento)
+		bolaProta.position.x=THREE.Math.lerp(bolaProta.position.x,currentLane, velCambioCamino*reloj.getDelta());
 
-		if(!hasCollided && enPartida){
-			score+=1000*rollingSpeed*(1/godzillaReleaseInterval) * delta
+		if(!haChocado && enPartida){ //Se suma la puntuación
+			score+=1000*velRuede*(1/godzillaReleaseInterval) * delta
 			scoreText.innerHTML="Puntuación: " + Math.round(score).toString();
 		}
 
-		if(clock.getElapsedTime()>godzillaReleaseInterval){ //Se actualiza la puntuación aquí para ser independiente de fps
-			clock.start();
-			addPathgodzilla();
+		if(reloj.getElapsedTime()>godzillaReleaseInterval){ //Se actualiza la puntuación aquí para ser independiente de fps
+			reloj.start();
+			agregarGodzillaCamino();
 		}
-		dogodzillaLogic();
+		calcularChoque();
 		render();
-		animFrame = requestAnimationFrame(update);
+		requestAnimationFrame(update);
 	}
 }
-function dogodzillaLogic(){
+function calcularChoque(){
 	var onegodzilla;
 	var godzillaPos = new THREE.Vector3();
 	var godzillasToRemove=[];
-	godzillasInPath.forEach( function ( element, index ) {
-		onegodzilla=godzillasInPath[ index ];
+	godzillasCamino.forEach( function ( element, index ) {
+		onegodzilla=godzillasCamino[ index ];
 		godzillaPos.setFromMatrixPosition( onegodzilla.matrixWorld );
-		if(godzillaPos.z>6 &&onegodzilla.visible){//gone out of our view zone
+		if(godzillaPos.z>6 && onegodzilla.visible){//Se va del fov de la cámara
 			godzillasToRemove.push(onegodzilla);
-		}else{//check collision
-			if(godzillaPos.distanceTo(heroSphere.position)<=0.6){
-				hasCollided=true;
+		}else{//Comprobar choque
+			if(godzillaPos.distanceTo(bolaProta.position)<=0.6){ //Balancear en torno a distancia
+				haChocado=true;
 				gameOver();
 			}
 		}
@@ -357,11 +349,10 @@ function dogodzillaLogic(){
 	var fromWhere;
 	godzillasToRemove.forEach( function ( element, index ) {
 		onegodzilla=godzillasToRemove[ index ];
-		fromWhere=godzillasInPath.indexOf(onegodzilla);
-		godzillasInPath.splice(fromWhere,1);
+		fromWhere=godzillasCamino.indexOf(onegodzilla);
+		godzillasCamino.splice(fromWhere,1);
 		godzillasPool.push(onegodzilla);
 		onegodzilla.visible=false;
-		console.log("remove godzilla");
 	});
 }
 
@@ -370,28 +361,29 @@ function render(){
 }
 
 function gameOver () { //Fin de partida
-  var audio = new Audio('../sounds/godScream.ogg');
-  audio.volume = 0.5;
-  audio.play();
+	var audio = new Audio('../sounds/godScream.ogg');
+	audio.volume = 0.5;
+	audio.loop = true;
+	audio.play();
 
-  var botonEnd = document.createElement('button');
-  botonEnd.innerHTML = "Volver a intentar";
-  botonEnd.onclick = function(){location.reload()};
+	var botonEnd = document.createElement('button');
+	botonEnd.innerHTML = "Volver a intentar";
+	botonEnd.onclick = function(){location.reload()};
 
-  botonEnd.style.position = 'absolute';
-  botonEnd.style.width = "100px";
-  botonEnd.style.height = "50px";
-  botonEnd.style.left = "calc(50% - 50px)";
-  botonEnd.style.top = "calc(40%)";
-  botonEnd.style.border = "thick solid #FFFFFF";
-  botonEnd.style.opacity = "0.7";
-  botonEnd.style.borderRadius = "4px";
+	botonEnd.style.position = 'absolute';
+	botonEnd.style.width = "100px";
+	botonEnd.style.height = "50px";
+	botonEnd.style.left = "calc(50% - 50px)";
+	botonEnd.style.top = "calc(40%)";
+	botonEnd.style.border = "thick solid #FFFFFF";
+	botonEnd.style.opacity = "0.7";
+	botonEnd.style.borderRadius = "4px";
 
-  scoreText.style.fontSize = "60px";
-  scoreText.style.left = "40%";
-  scoreText.style.top = "10%";
+	scoreText.style.fontSize = "60px";
+	scoreText.style.left = "40%";
+	scoreText.style.top = "10%";
 
-  document.body.append(botonEnd);
+	document.body.append(botonEnd);
 }
 
 function updateAspectRatio() { //Se asegura que la cámara no se distorsione al modificar el aspect ratio
