@@ -224,9 +224,13 @@ function loadScene(){
     esparrago.receiveShadow = true;
     esparrago.castShadow = true;
 
-    var paredes = ["../textures/paredes/posx.jpg","../textures/paredes/negx.jpg","../textures/paredes/posy.jpg",
-    "../textures/paredes/negy.jpg","../textures/paredes/posz.jpg","../textures/paredes/negz.jpg"];
-    var texEsfera = new THREE.CubeTextureLoader().load(paredes);
+    var cubeLoader = new THREE.CubeTextureLoader();
+    cubeLoader.setPath('../textures/paredes/');
+    var texEsfera = cubeLoader.load([
+        'posx.jpg', 'negx.jpg',
+        'posy.jpg', 'negy.jpg',
+        'posz.jpg', 'negz.jpg'
+    ]);
     matEsfera = new THREE.MeshPhongMaterial({color:'gold',specular:'darkgray',envMap:texEsfera})
     rotula = new THREE.Mesh(rotulaG, matEsfera);
     rotula.position.set(0, 120, 0);
