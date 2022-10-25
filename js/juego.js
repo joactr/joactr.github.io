@@ -193,6 +193,7 @@ function addWorld(){
 	var sphereMaterial = new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load(
         '../textures/tierra_8k.jpg'
     )})
+	//
 	tierraBola = new THREE.Mesh( sphereGeometry, sphereMaterial );
 	tierraBola.receiveShadow = true;
 	tierraBola.rotation.z=-Math.PI/2;
