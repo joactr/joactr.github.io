@@ -40,7 +40,7 @@ function init(){
     scene.add(ambiental);
 
     var direccional = new THREE.DirectionalLight('white',1);
-    direccional.position.set(0,100,-100);
+    direccional.position.set(0,300,300);
     direccional.castShadow = true;
     direccional.shadow.camera.near = 0.5;
     direccional.shadow.camera.far = 2000;
@@ -48,14 +48,16 @@ function init(){
     direccional.shadow.camera.right = 2000;
     direccional.shadow.camera.top = 2000;
     direccional.shadow.camera.bottom = - 2000;
-    direccional.shadow.mapSize.width = 10000; // default
-    direccional.shadow.mapSize.height = 10000; // default
+    direccional.shadow.mapSize.width = 10000; // Más resolución de sombras
+    direccional.shadow.mapSize.height = 10000;
     scene.add(direccional);
 
     var puntual = new THREE.PointLight('white', 0.3);
     puntual.position.set(50,200,50)
     scene.add(puntual);
     puntual.castShadow = true
+    puntual.shadow.mapSize.width = 10000; // Más resolución de sombras
+    puntual.shadow.mapSize.height = 10000;
 
     /*var focal = new THREE.SpotLight('orange', 0.5);
     focal.position.set(300, 600, -800);
