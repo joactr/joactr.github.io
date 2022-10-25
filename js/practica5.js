@@ -4,7 +4,7 @@ import {TWEEN} from '../lib/tween.module.min.js';
 let renderer, scene, camera, cameraPlanta,matEsfera;
 let controls,gui;
 var materialPlateadoLambert,materialPlateadoPhong,materialDorado,materialPinza;
-var material_robot,robot,suelo,base,esparrago,rotula,eje,mano,basePinzaDe,basePinzaIz,pinzaDe,pinzaIz,brazo,antebrazo;
+var robot,suelo,base,esparrago,rotula,eje,mano,basePinzaDe,basePinzaIz,pinzaDe,pinzaIz,brazo,antebrazo;
 var disco,nervio1,nervio2,nervio3,nervio4;
 let L = 90;
 
@@ -112,13 +112,12 @@ function setCameras(ar){ //Inicializa la cámara ortográfica de planta
 }
 
 function loadScene(){
-    material_robot = new THREE.MeshLambertMaterial({ wireframe: false }); //Creamos el material
     robot = new THREE.Object3D(); //Creamos el robot
     var baseG = new THREE.CylinderGeometry(50, 50, 15, 50); //RadioTop,RadioBot,altura,segmentosRad
     brazo = new THREE.Object3D();
     var ejeG = new THREE.CylinderGeometry(25, 25, 15, 20);
-    var esparragoG = new THREE.BoxGeometry(18, 120, 12);
-    var rotulaG = new THREE.SphereGeometry( 20, 10, 10 ); //Radio, segmentosAlto/Ancho
+    var esparragoG = new THREE.BoxGeometry(18, 120, 12,5,10,5);
+    var rotulaG = new THREE.SphereGeometry( 20, 20, 20 ); //Radio, segmentosAlto/Ancho
     antebrazo = new THREE.Object3D();
     var discoG = new THREE.CylinderGeometry(22, 22, 6, 20);
     var nervioG = new THREE.BoxGeometry(4, 80, 4);
@@ -225,7 +224,7 @@ function loadScene(){
     esparrago.castShadow = true;
 
     var cubeLoader = new THREE.CubeTextureLoader();
-    cubeLoader.setPath('../textures/paredes/');
+    cubeLoader.setPath('../textures/');
     var texEsfera = cubeLoader.load([
         'posx.jpg', 'negx.jpg',
         'posy.jpg', 'negy.jpg',
@@ -302,20 +301,20 @@ function loadScene(){
     scene.add(robot);
 
 
-
+    var path = '../textures/'
     const paredesHab = []
     paredesHab.push( new THREE.MeshBasicMaterial({side: THREE.BackSide,
-        map: new THREE.TextureLoader().load("../textures/paredes/posx.jpg")}))
+        map: new THREE.TextureLoader().load(path+"posx.jpg")}))
     paredesHab.push( new THREE.MeshBasicMaterial({side: THREE.BackSide,
-        map: new THREE.TextureLoader().load("../textures/paredes/negx.jpg")}))
+        map: new THREE.TextureLoader().load(path+"negx.jpg")}))
     paredesHab.push( new THREE.MeshBasicMaterial({side: THREE.BackSide,
-        map: new THREE.TextureLoader().load("../textures/paredes/posy.jpg")}))
+        map: new THREE.TextureLoader().load(path+"posy.jpg")}))
     paredesHab.push( new THREE.MeshBasicMaterial({side: THREE.BackSide,
-        map: new THREE.TextureLoader().load("../textures/paredes/negy.jpg")}))
+        map: new THREE.TextureLoader().load(path+"negy.jpg")}))
     paredesHab.push( new THREE.MeshBasicMaterial({side: THREE.BackSide,
-        map: new THREE.TextureLoader().load("../textures/paredes/posz.jpg")}))
+        map: new THREE.TextureLoader().load(path+"posz.jpg")}))
     paredesHab.push( new THREE.MeshBasicMaterial({side: THREE.BackSide,
-        map: new THREE.TextureLoader().load("../textures/paredes/negz.jpg")}))
+        map: new THREE.TextureLoader().load(path+"negz.jpg")}))
 
     var habitacion = new THREE.Mesh(new THREE.BoxGeometry(5000, 5000, 5000), paredesHab);
     scene.add(habitacion);
