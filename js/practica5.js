@@ -176,7 +176,7 @@ function loadScene(){
     pinzasG.setFromPoints(puntosPinza)
     pinzasG.setAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) );
     pinzasG.computeVertexNormals();
-    materialPlateadoLambert = new THREE.MeshLambertMaterial({ color: 'silver', shading: THREE.SmoothShading, map: new THREE.TextureLoader().load(
+    materialPlateadoLambert = new THREE.MeshLambertMaterial({ color: 'silver', map: new THREE.TextureLoader().load(
         "../textures/metal.jpg") });
     //Las posiciones y rotaciones de las pinzas son distintas para que la parte externa de la pinza quede similar
     materialPinza = new THREE.MeshLambertMaterial({ color: 'silver', });
@@ -227,13 +227,13 @@ function loadScene(){
     var paredes = ["../textures/paredes/posx.jpg","../textures/paredes/negx.jpg","../textures/paredes/posy.jpg",
     "../textures/paredes/negy.jpg","../textures/paredes/posz.jpg","../textures/paredes/negz.jpg"];
     var texEsfera = new THREE.CubeTextureLoader().load(paredes);
-    matEsfera = new THREE.MeshPhongMaterial({color:'gold',specular:'darkgray',sharpness:30,envMap:texEsfera})
+    matEsfera = new THREE.MeshPhongMaterial({color:'gold',specular:'darkgray',envMap:texEsfera})
     rotula = new THREE.Mesh(rotulaG, matEsfera);
     rotula.position.set(0, 120, 0);
     rotula.receiveShadow = true;
     rotula.castShadow = true;
 
-    materialDorado = new THREE.MeshPhongMaterial({ color: 'gold',specular: 'gold',shinies:60, map: new THREE.TextureLoader().load(
+    materialDorado = new THREE.MeshPhongMaterial({ color: 'gold',specular: 'gold', map: new THREE.TextureLoader().load(
         "../textures/gold.jpg") });
     disco = new THREE.Mesh(discoG, materialDorado);
     disco.position.set(0, 0, 0);
